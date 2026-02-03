@@ -1,23 +1,14 @@
-import { randomUUID } from "crypto";
 import { Schema, model } from "mongoose";
 
 export type TodoStatus = "pending" | "completed";
 
 const todoSchema = new Schema(
   {
-    taskId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-      default: () => randomUUID(),
-    },
     userId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
       index: true,
-      trim: true,
     },
     title: {
       type: String,

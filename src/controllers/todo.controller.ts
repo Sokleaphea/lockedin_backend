@@ -68,7 +68,7 @@ export const getTodos = async (req: Request, res: Response) => {
   }
 };
 
-// Update a task by taskId.
+// Update a task by _id.
 export const updateTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -90,7 +90,7 @@ export const updateTodo = async (req: Request, res: Response) => {
       }
     }
 
-    const todo = await Todo.findOne({ taskId: id });
+    const todo = await Todo.findById(id);
 
     if (!todo) {
       return res.status(404).json({ message: "Todo not found" });
@@ -120,12 +120,12 @@ export const updateTodo = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a task by taskId.
+// Delete a task by _id.
 export const deleteTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const todo = await Todo.findOne({ taskId: id });
+    const todo = await Todo.findById(id);
 
     if (!todo) {
       return res.status(404).json({ message: "Todo not found" });
