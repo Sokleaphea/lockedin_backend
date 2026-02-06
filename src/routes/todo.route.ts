@@ -10,7 +10,7 @@ const router = Router();
 
 router.post("/tasks", createTodo);
 router.get("/tasks", getTodos);
-router.put("/tasks/:id", updateTodo);
+router.patch("/tasks/:id", updateTodo);
 router.delete("/tasks/:id", deleteTodo);
 
 export default router;
