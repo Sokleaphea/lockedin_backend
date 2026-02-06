@@ -13,13 +13,29 @@
 import mongoose from "mongoose";
 
 export const connectDB = async () => {
-  const uri = process.env.MONGO_URI;
+  // Destructure required environment variables
+  const {
+    MONGO_USER,
+    MONGO_PASSWORD,
+    MONGO_CLUSTER,
+    MONGO_DB,
+    MONGO_OPTIONS,
+  } = process.env;
 
-  if (!uri) {
-    throw new Error("MONGO_URI is not defined in environment variables");
+  // Validate required variables early (fail fast)
+  if (!MONGO_USER || !MONGO_PASSWORD || !MONGO_CLUSTER || !MONGO_DB) {
+    throw new Error(
+      "Missing MongoDB environment variables. Check MONGO_USER, MONGO_PASSWORD, MONGO_CLUSTER, and MONGO_DB."
+    );
   }
 
+  // Build MongoDB connection URI from modular parts
+  const uri = `mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_CLUSTER}/${MONGO_DB}${
+    MONGO_OPTIONS ? `?${MONGO_OPTIONS}` : ""
+  }`;
+
   try {
+    // Connect to MongoDB Atlas
     await mongoose.connect(uri);
     console.log("✅ MongoDB Atlas connected");
   } catch (error) {
@@ -27,3 +43,4 @@ export const connectDB = async () => {
     process.exit(1);
   }
 };
+
