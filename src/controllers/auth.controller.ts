@@ -8,6 +8,12 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, username, confirmPassword } = req.body;
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({
+                message: "Username can only contain letters, numbers, and underscore. No spaces."
+            });
+        }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exist"})
@@ -53,6 +59,6 @@ export const login = async (req: Request, res: Response) => {
         );
         res.json({token});
     } catch (err) {
-        res.status(500).json({ message: "Login failed"})
+        res.status(500).json({ message: "Login failed" })
     }
 }
