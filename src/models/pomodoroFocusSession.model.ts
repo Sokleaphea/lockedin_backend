@@ -4,17 +4,19 @@ const PomodoroFocusSessionSchema = new Schema({
   userId: {
     type: Types.ObjectId,
     required: true,
-    index: true,
+    index: true, 
   },
-  durationMinutes: {
+
+  durationSeconds: {
     type: Number,
     required: true,
-    min: 1,
+    min: 1, 
   },
+
   completedAt: {
     type: Date,
     required: true,
-    index: true,
+    index: true, // useful for date-range queries (daily / weekly stats)
   },
 });
 
