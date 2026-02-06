@@ -1,26 +1,15 @@
-// import mongoose from "mongoose";
-
-// export const connectDB = async () => {
-//   try {
-//     await mongoose.connect(process.env.DB_URI!);
-//     console.log("✅ MongoDB connected");
-//   } catch (error) {
-//     console.error("❌ MongoDB connection failed", error);
-//     process.exit(1);
-//   }
-// };
-
 import mongoose from "mongoose";
 
 export const connectDB = async () => {
-  const uri = process.env.MONGO_URI;
+  const { MONGO_URI } = process.env;
 
-  if (!uri) {
+  // Fail fast if URI is missing
+  if (!MONGO_URI) {
     throw new Error("MONGO_URI is not defined in environment variables");
   }
 
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB Atlas connected");
   } catch (error) {
     console.error("❌ MongoDB connection failed", error);
