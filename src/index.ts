@@ -30,6 +30,7 @@ import express from "express";
 import authRoute from "./routes/auth.route";
 import passwordRoute from "./routes/password.route";
 import { connectDB } from "./config/db";
+import todoRoutes from "./routes/todo.route";
 
 const app = express();
 const PORT = 3000;
@@ -42,6 +43,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoute);
 app.use("/api/password", passwordRoute);
+
+app.use("/api/todo", todoRoutes);
 
 (async () => {
   try {
