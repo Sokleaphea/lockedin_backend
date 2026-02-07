@@ -8,7 +8,23 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, username, confirmPassword } = req.body;
+        if (!email || !password || !username || !confirmPassword) {
+            return res.status(400).json({ message: "All fields are required" })
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long"})
+        }
+        if (!email.endsWith("@gmail.com")) {
+            return res.status(400).json({ message: "Email must end with @gmail.com"});
+        }
         const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        const minUsernameLength = 5;
+        const maxUsernameLength = 30;
+        if (username.length < minUsernameLength || username.length > maxUsernameLength) {
+            return res.status(400).json({
+                message: `Username must be between ${minUsernameLength} and ${maxUsernameLength} characters long`
+            });
+        }
         if (!usernameRegex.test(username)) {
             return res.status(400).json({
                 message: "Username can only contain letters, numbers, and underscore. No spaces."
@@ -47,6 +63,10 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: "Invalid credentials"})
         }
 
+        // if (user.authProvider === "google") {
+        //     return res.status(400).json({ message: "This account is registered with Google. Please login with Google instead." });
+        // }
+
         const isMatch = await bcrypt.compare(password, user.password!);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
@@ -82,7 +102,6 @@ export const googleAuth = async (req: Request, res: Response) => {
 
         // Check if user exists or create new user
         let user = await User.findOne({ email });
-
         if (!user) {
             user = await User.create({
                 email,
@@ -92,6 +111,13 @@ export const googleAuth = async (req: Request, res: Response) => {
                 avatar: picture,
                 isVerified: true, // Google accounts are pre-verified
             });
+        } else if (!user.googleId) {
+            // Update existing user with Google info
+            user.googleId = googleId;
+            user.displayName = name;
+            user.avatar = picture;
+            user.isVerified = true;
+            await user.save();
         }
 
         // Generate your app's JWT token
