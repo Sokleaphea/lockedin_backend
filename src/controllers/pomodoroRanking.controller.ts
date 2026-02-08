@@ -5,7 +5,7 @@ import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model"
 //  * Returns ranking of user + friends based on total focus time
 export async function getPomodoroRanking(req: Request, res: Response) {
 //    * TEMP: current user ID (from auth later)
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
 
 //    * TEMP: mock friend list.
 //    * In the future, this will come from a friends/followers system.
