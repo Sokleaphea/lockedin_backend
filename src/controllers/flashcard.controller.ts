@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { FlashcardSetModel } from "../models/flashCardSet.model";
+import { FlashcardSetModel } from "../models/flashcardSet.model";
 import { FlashcardCardModel } from "../models/flashcardCard.model";
 import { Types } from "mongoose";
 
 export async function createFlashcardSet(req: Request, res: Response) {
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
   const { title, cards } = req.body;
 
   if (!title || title.trim() === "") {
@@ -44,7 +44,7 @@ export async function createFlashcardSet(req: Request, res: Response) {
 }
 
 export async function getFlashcardSets(req: Request, res: Response) {
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
   const { search } = req.query;
 
   const filter: any = { userId };
@@ -76,7 +76,7 @@ export async function getFlashcardSets(req: Request, res: Response) {
 }
 
 export async function getFlashcardSet(req: Request, res: Response) {
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
   const { id } = req.params;
 
   const set = await FlashcardSetModel.findOne({
@@ -100,7 +100,7 @@ export async function getFlashcardSet(req: Request, res: Response) {
 }
 
 export async function updateFlashcardSet(req: Request, res: Response) {
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
   const { id } = req.params;
   const { title, addCards, updateCards, deleteCardIds } = req.body;
 
@@ -147,7 +147,7 @@ export async function updateFlashcardSet(req: Request, res: Response) {
 }
 
 export async function deleteFlashcardSet(req: Request, res: Response) {
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
   const { id } = req.params;
 
   const set = await FlashcardSetModel.findOneAndDelete({
