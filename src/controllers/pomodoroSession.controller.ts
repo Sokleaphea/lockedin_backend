@@ -10,7 +10,7 @@ export async function createPomodoroSession(
 ) {
 // TEMP: hardcoded user ID.
 // In production, this will come from auth middleware (req.user.id)
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
 
 // Extract session type and duration from request body
   const { type, durationSeconds } = req.body;
