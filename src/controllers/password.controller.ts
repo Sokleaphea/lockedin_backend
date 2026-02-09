@@ -6,13 +6,17 @@ import bcrypt from "bcryptjs";
 
 
 export const generateOTP = () => {
-    return Math.floor(10000 + Math.random() * 900000).toString(); 
+    return Math.floor(100000 + Math.random() * 900000).toString(); 
 }
 
 export const sendOTP = async (req: Request, res: Response) => {
     const {email} = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.password) {
+        return res.status(400).json({ message: "Password reset not available for this account"});
+    }
 
     const otp = generateOTP();
     user.resetOTP = crypto.createHash("sha256").update(otp).digest("hex");
@@ -31,6 +35,10 @@ export const resetPasswordWithOTP = async (req: Request, res: Response) => {
     const {email, otp, newPassword} = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    if(!user.password) {
+        return res.status(400).json({ message: "Password reset not available for Google login users"});
+    }
 
     const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
     if (!user.resetOTP || user.resetOTP !== hashedOTP || !user.resetOTPExpires || user.resetOTPExpires < new Date()) {

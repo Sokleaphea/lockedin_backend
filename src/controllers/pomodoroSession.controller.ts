@@ -2,45 +2,51 @@ import { Request, Response } from "express";
 import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
 import { Types } from "mongoose";
 
+// Handles creation of a pomodoro session.
+// Only "focus" sessions are saved.
 export async function createPomodoroSession(
-    req: Request,
-    res: Response
+  req: Request,
+  res: Response
 ) {
-    // provided by auth middleware
-    //   const userId = req.user.id;
-    const userId = new Types.ObjectId("64f000000000000000000001");
+// TEMP: hardcoded user ID.
+// In production, this will come from auth middleware (req.user.id)
+  const userId = new Types.ObjectId((req as any).user.id);
 
-    const { type, durationMinutes } = req.body;
+// Extract session type and duration from request body
+  const { type, durationSeconds } = req.body;
 
-    // 1. Validate duration
-    if (
-        typeof durationMinutes !== "number" ||
-        durationMinutes <= 0
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid duration",
-        });
-    }
-
-    // 2. Ignore non-focus sessions
-    if (type !== "focus") {
-        return res.status(200).json({
-            success: true,
-            message: "Session ignored (not focus)",
-        });
-    }
-
-    // 3. Persist focus session
-    await PomodoroFocusSessionModel.create({
-        userId,
-        durationMinutes,
-        completedAt: new Date(),
+// Validate duration:
+// - Must be a number
+// - Must be greater than 0
+  if (
+    typeof durationSeconds !== "number" ||
+    durationSeconds <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid duration",
     });
+  }
 
-    // 4. Success response
+// Ignore non-focus sessions (e.g. break sessions).
+// They are acknowledged but NOT saved.
+  if (type !== "focus") {
     return res.status(200).json({
-        success: true,
-        message: "Session saved successfully",
+      success: true,
+      message: "Session ignored (not focus)",
     });
+  }
+
+// Persist the focus session to the database
+  await PomodoroFocusSessionModel.create({
+    userId,
+    durationSeconds,
+    completedAt: new Date(), // mark when session was completed
+  });
+
+// Send success response
+  return res.status(200).json({
+    success: true,
+    message: "Session saved successfully",
+  });
 }

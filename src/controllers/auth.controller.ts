@@ -8,6 +8,28 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, username, confirmPassword } = req.body;
+        if (!email || !password || !username || !confirmPassword) {
+            return res.status(400).json({ message: "All fields are required" })
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long"})
+        }
+        if (!email.endsWith("@gmail.com")) {
+            return res.status(400).json({ message: "Email must end with @gmail.com"});
+        }
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        const minUsernameLength = 5;
+        const maxUsernameLength = 30;
+        if (username.length < minUsernameLength || username.length > maxUsernameLength) {
+            return res.status(400).json({
+                message: `Username must be between ${minUsernameLength} and ${maxUsernameLength} characters long`
+            });
+        }
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({
+                message: "Username can only contain letters, numbers, and underscore. No spaces."
+            });
+        }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exist"})
@@ -41,7 +63,11 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: "Invalid credentials"})
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        // if (user.authProvider === "google") {
+        //     return res.status(400).json({ message: "This account is registered with Google. Please login with Google instead." });
+        // }
+
+        const isMatch = await bcrypt.compare(password, user.password!);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
@@ -53,6 +79,67 @@ export const login = async (req: Request, res: Response) => {
         );
         res.json({token});
     } catch (err) {
-        res.status(500).json({ message: "Login failed"})
+        res.status(500).json({ message: "Login failed" })
+    }
+}
+
+export const googleAuth = async (req: Request, res: Response) => {
+    try {
+        const { idToken } = req.body;
+
+        // Verify the token
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload) {
+            return res.status(401).json({ success: false, message: "Invalid token" });
+        }
+
+        const { email, sub: googleId, name, picture } = payload;
+
+        // Check if user exists or create new user
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = await User.create({
+                email,
+                username: email!.split("@")[0],
+                googleId,
+                displayName: name,
+                avatar: picture,
+                isVerified: true, // Google accounts are pre-verified
+            });
+        } else if (!user.googleId) {
+            // Update existing user with Google info
+            user.googleId = googleId;
+            user.displayName = name;
+            user.avatar = picture;
+            user.isVerified = true;
+            await user.save();
+        }
+
+        // Generate your app's JWT token
+        const token = jwt.sign(
+            { id: user.id },
+            process.env.JWT_SECRET as string,
+            { expiresIn: "1d" }
+        );
+
+        res.json({
+            success: true,
+            data: {
+                token,
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    username: user.username,
+                },
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({ success: false, message: "Invalid token" });
     }
 }

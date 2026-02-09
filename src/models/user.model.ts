@@ -9,11 +9,26 @@ const userSchema = new Schema(
         },
         password: {
             type: String,
-            required: true,
+            required: false,
         },
         username: {
             type: String,
             required: true,
+        },
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+        displayName: {
+            type: String,
+        },
+        avatar: {
+            type: String,
+        },
+        isVerified: {
+            type: Boolean,
+            default: false,
         },
         resetOTP: {
             type: String,
