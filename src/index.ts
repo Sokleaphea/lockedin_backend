@@ -6,6 +6,7 @@ import passwordRoute from "./routes/password.route";
 import todoRoutes from "./routes/todo.route";
 import pomodoroRoutes from "./routes/pomodoro.route";
 import flashcardRoutes from "./routes/flashcard.route";
+import aiRoute from "./routes/ai.route";
 import { connectDB } from "./config/db";
 
 const app = express();
@@ -32,6 +33,8 @@ app.use("/api/password", passwordRoute);
 app.use("/api/todo", todoRoutes);
 app.use("/api/pomodoro", pomodoroRoutes); // ✅ THIS WAS MISSING
 app.use("/api/flashcards", flashcardRoutes);
+app.use("/api/ai", aiRoute);
+
 
 (async () => {
   try {
@@ -39,7 +42,7 @@ app.use("/api/flashcards", flashcardRoutes);
 
     app.listen(PORT, () => {
       console.log(`✅ Server running at http://localhost:${PORT}`);
-      console.log("Replicate token loaded:", !!process.env.REPLICATE_API_TOKEN);
+      console.log("Groq key loaded:", process.env.GROQ_API_KEY?.slice(0, 6));
 
     });
   } catch (err) {
