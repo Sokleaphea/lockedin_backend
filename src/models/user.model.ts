@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
     {
@@ -22,9 +22,15 @@ const userSchema = new Schema(
         },
         displayName: {
             type: String,
+            maxLength: 50,
         },
         avatar: {
             type: String,
+        },
+        bio: {
+            type: String,
+            maxLength: 160,
+            default: "",
         },
         isVerified: {
             type: Boolean,
@@ -39,5 +45,9 @@ const userSchema = new Schema(
     },
     { timestamps: true}
 )
-
+userSchema.pre("save", function () {
+  if (!this.displayName) {
+    this.displayName = this.username;
+  }
+});
 export default model("User", userSchema);
