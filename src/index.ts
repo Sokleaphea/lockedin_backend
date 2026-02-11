@@ -5,8 +5,9 @@ import "./config/cloudinary";
 import authRoute from "./routes/auth.route";
 import passwordRoute from "./routes/password.route";
 import todoRoutes from "./routes/todo.route";
-import pomodoroRoutes from "./routes/pomodoro.routes";
 import settingRoute from "./routes/setting.route";
+import pomodoroRoutes from "./routes/pomodoro.route";
+import flashcardRoutes from "./routes/flashcard.route";
 import { connectDB } from "./config/db";
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/password", passwordRoute);
 app.use("/api/todo", todoRoutes);
 app.use("/api/pomodoro", pomodoroRoutes); // ✅ THIS WAS MISSING
 app.use("/api/setting", settingRoute);
+app.use("/api/flashcards", flashcardRoutes);
 
 (async () => {
   try {

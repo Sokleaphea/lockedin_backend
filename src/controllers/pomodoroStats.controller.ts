@@ -46,7 +46,7 @@ async function aggregate(userId: any, from?: Date) {
 //  * Returns focus statistics for the current user
 export async function getPomodoroStats(req: Request, res: Response) {
 //    * TEMP: hardcoded user ID
-  const userId = new Types.ObjectId("64f000000000000000000001");
+  const userId = new Types.ObjectId((req as any).user.id);
 
   const now = new Date();
 
