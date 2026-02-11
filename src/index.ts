@@ -1,9 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import "./config/cloudinary";
 import authRoute from "./routes/auth.route";
 import passwordRoute from "./routes/password.route";
 import todoRoutes from "./routes/todo.route";
+import settingRoute from "./routes/setting.route";
 import pomodoroRoutes from "./routes/pomodoro.route";
 import flashcardRoutes from "./routes/flashcard.route";
 import { connectDB } from "./config/db";
@@ -12,7 +14,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS before routes
-
+console.log("Cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("API key:", process.env.CLOUDINARY_API_KEY);
+console.log("API secret:", process.env.CLOUDINARY_API_SECRET);
 app.use(cors({
   origin: ["http://localhost:58016", "http://localhost:3000", "http://localhost:50816"], // Support multiple origins
   credentials: true,
@@ -31,6 +35,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/password", passwordRoute);
 app.use("/api/todo", todoRoutes);
 app.use("/api/pomodoro", pomodoroRoutes); // ✅ THIS WAS MISSING
+app.use("/api/setting", settingRoute);
 app.use("/api/flashcards", flashcardRoutes);
 
 (async () => {
