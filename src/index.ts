@@ -14,9 +14,6 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS before routes
-console.log("Cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("API key:", process.env.CLOUDINARY_API_KEY);
-console.log("API secret:", process.env.CLOUDINARY_API_SECRET);
 app.use(cors({
   origin: ["http://localhost:58016", "http://localhost:3000", "http://localhost:50816"], // Support multiple origins
   credentials: true,
