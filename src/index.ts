@@ -8,6 +8,7 @@ import todoRoutes from "./routes/todo.route";
 import settingRoute from "./routes/setting.route";
 import pomodoroRoutes from "./routes/pomodoro.route";
 import flashcardRoutes from "./routes/flashcard.route";
+import aiRoute from "./routes/ai.route";
 import { connectDB } from "./config/db";
 
 const app = express();
@@ -31,9 +32,11 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoute);
 app.use("/api/password", passwordRoute);
 app.use("/api/todo", todoRoutes);
-app.use("/api/pomodoro", pomodoroRoutes); // ✅ THIS WAS MISSING
+app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/setting", settingRoute);
 app.use("/api/flashcards", flashcardRoutes);
+app.use("/api/ai", aiRoute);
+
 
 (async () => {
   try {
@@ -41,6 +44,8 @@ app.use("/api/flashcards", flashcardRoutes);
 
     app.listen(PORT, () => {
       console.log(`✅ Server running at http://localhost:${PORT}`);
+      console.log("Groq key loaded:", process.env.GROQ_API_KEY?.slice(0, 6));
+
     });
   } catch (err) {
     console.error("❌ Server failed to start", err);
