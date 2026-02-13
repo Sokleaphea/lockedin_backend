@@ -4,11 +4,15 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: number;
+        id: string;
         email?: string;
       } | JwtPayload;
+      file?: Express.Multer.File;
+      files?: Express.Multer.File[];
     }
   }
 }
-
+export interface MulterRequest extends Request {
+  file: Express.Multer.File;
+}
 export {};
