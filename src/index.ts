@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoute);
 app.use("/api/password", passwordRoute);
 app.use("/api/todo", todoRoutes);
-app.use("/api/pomodoro", pomodoroRoutes); // ✅ THIS WAS MISSING
+app.use("/api/pomodoro", pomodoroRoutes); 
 app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
 
