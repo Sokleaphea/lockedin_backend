@@ -9,6 +9,7 @@ import settingRoute from "./routes/setting.route";
 import pomodoroRoutes from "./routes/pomodoro.route";
 import flashcardRoutes from "./routes/flashcard.route";
 import aiRoute from "./routes/ai.route";
+import followRoute from "./routes/follow.route";
 import { connectDB } from "./config/db";
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/setting", settingRoute);
 app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
+app.use("/api/follow", followRoute);
 
 
 (async () => {

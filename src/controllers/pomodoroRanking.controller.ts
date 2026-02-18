@@ -1,39 +1,116 @@
+// import { Request, Response } from "express";
+// import { Types } from "mongoose";
+// import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
+// import { Follow } from "../models/follow.model";
+
+// export async function getPomodoroRanking(req: Request, res: Response) {
+//   try {
+//     const userId = new Types.ObjectId(req.user!.id);
+
+//     // 1️⃣ Get users I am following
+//     const following = await Follow.find({ followerId: userId });
+
+//     const followingIds = following.map(f => f.followingId);
+
+//     // 2️⃣ Include myself in ranking
+//     const rankingUserIds = [userId, ...followingIds];
+
+//     // 3️⃣ Aggregate focus time
+//     const ranking = await PomodoroFocusSessionModel.aggregate([
+//       {
+//         $match: { userId: { $in: rankingUserIds } },
+//       },
+//       {
+//         $group: {
+//           _id: "$userId",
+//           totalSeconds: { $sum: "$durationSeconds" },
+//         },
+//       },
+//       {
+//         $sort: { totalSeconds: -1 },
+//       },
+//     ]);
+
+//     return res.json(ranking);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Failed to fetch ranking" });
+//   }
+// }
+
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
+import { Follow } from "../models/follow.model";
 
-//  * Returns ranking of user + friends based on total focus time
 export async function getPomodoroRanking(req: Request, res: Response) {
-//    * TEMP: current user ID (from auth later)
-  const userId = new Types.ObjectId((req as any).user.id);
+  try {
+    const userId = new Types.ObjectId(req.user!.id);
 
-//    * TEMP: mock friend list.
-//    * In the future, this will come from a friends/followers system.
-  const friendIds = [
-    userId,
-    new Types.ObjectId("64f000000000000000000002"),
-    new Types.ObjectId("64f000000000000000000003"),
-  ];
+    // 1️⃣ Users I follow
+    const following = await Follow.find({ followerId: userId });
+    const followingIds = following.map(f => f.followingId.toString());
 
-//    * Aggregate focus time for each user
-  const ranking = await PomodoroFocusSessionModel.aggregate([
-    {
-      // Only include sessions from user + friends
-      $match: { userId: { $in: friendIds } },
-    },
-    {
-      // Group sessions by user and sum focus time
-      $group: {
-        _id: "$userId",
-        totalSeconds: { $sum: "$durationSeconds" },
+    // 2️⃣ Users who follow me
+    const followers = await Follow.find({ followingId: userId });
+    const followerIds = followers.map(f => f.followerId.toString());
+
+    // 3️⃣ Find mutuals (intersection)
+    const mutualIds = followingIds.filter(id =>
+      followerIds.includes(id)
+    );
+
+    // 4️⃣ Convert back to ObjectId
+    const mutualObjectIds = mutualIds.map(id => new Types.ObjectId(id));
+
+    // 5️⃣ Include myself
+    const rankingUserIds = [userId, ...mutualObjectIds];
+
+    // 6️⃣ Aggregate focus time
+    const ranking = await PomodoroFocusSessionModel.aggregate([
+      {
+        $match: { userId: { $in: rankingUserIds } },
       },
-    },
-    {
-      // Sort users by focus time (descending)
-      $sort: { totalSeconds: -1 },
-    },
-  ]);
+      {
+        $group: {
+          _id: "$userId",
+          totalSeconds: { $sum: "$durationSeconds" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",              // collection name
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          _id: 0,
+          totalSeconds: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            displayName: "$user.displayName",
+            avatar: "$user.avatar",
+          }
+        }
+      },
+      {
+        $sort: { totalSeconds: -1 },
+      },
+    ]);
 
-//    * Return ranking list
-  return res.json(ranking);
+
+    return res.json(ranking);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to fetch ranking" });
+  }
+
+
 }
