@@ -20,9 +20,9 @@ export const createTodo = async (req: Request, res: Response) => {
   try {
     const { userId, title, description, status, dueDate } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
-    }
+    // if (!userId) {
+    //   return res.status(400).json({ message: "userId is required" });
+    // }
 
     if (!title) {
       return res.status(400).json({ message: "title is required" });
@@ -57,7 +57,8 @@ export const createTodo = async (req: Request, res: Response) => {
 // Get all tasks, optionally filtered by userId.
 export const getTodos = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId as string | undefined;
+    // const userId = req.query.userId as string | undefined;
+    const userId = ( req as any ).user.id;
 
     const filter = userId ? { userId } : {};
     const todos = await Todo.find(filter).sort({ createdAt: -1 });
