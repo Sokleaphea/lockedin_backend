@@ -98,7 +98,7 @@ export default router;
  * /api/follow/followers:
  *   get:
  *     summary: Get list of followers
- *     description: Retrieves all users who follow the authenticated user.
+ *     description: Retrieves all users who follow the authenticated user, including mutual follow status.
  *     tags: [Follow]
  *     security:
  *       - BearerAuth: []
@@ -114,25 +114,24 @@ export default router;
  *                 properties:
  *                   _id:
  *                     type: string
- *                     example: "698808a9fa68c908e9240d8a"
  *                   username:
  *                     type: string
- *                     example: "john_doe"
  *                   displayName:
  *                     type: string
- *                     example: "John Doe"
  *                   avatar:
  *                     type: string
- *                     example: "https://res.cloudinary.com/..."
+ *                   isMutual:
+ *                     type: boolean
+ *                     example: true
  *       401:
- *         description: Unauthorized - missing or invalid JWT token
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  *
  * /api/follow/following:
  *   get:
  *     summary: Get list of following users
- *     description: Retrieves all users that the authenticated user is currently following.
+ *     description: Retrieves all users the authenticated user is following, including mutual follow status.
  *     tags: [Follow]
  *     security:
  *       - BearerAuth: []
@@ -148,18 +147,17 @@ export default router;
  *                 properties:
  *                   _id:
  *                     type: string
- *                     example: "69880a3cd48b713c3e68afc9"
  *                   username:
  *                     type: string
- *                     example: "jane_doe"
  *                   displayName:
  *                     type: string
- *                     example: "Jane Doe"
  *                   avatar:
  *                     type: string
- *                     example: "https://res.cloudinary.com/..."
+ *                   isMutual:
+ *                     type: boolean
+ *                     example: false
  *       401:
- *         description: Unauthorized - missing or invalid JWT token
+ *         description: Unauthorized
  *       500:
  *         description: Server error
- */
+ */ 

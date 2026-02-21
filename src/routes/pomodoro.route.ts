@@ -49,7 +49,9 @@ export default router;
  *               - durationSeconds
  *     responses:
  *       200:
- *         description: Session processed successfully
+ *         description: Session ignored (non-focus types)
+ *       201:
+ *         description: Session saved successfully
  *         content:
  *           application/json:
  *             schema:

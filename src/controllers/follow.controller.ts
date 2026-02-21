@@ -73,36 +73,88 @@ export const unfollowUser = async (req: Request, res: Response) => {
     }
 };
 
+// export const getFollowers = async (req: Request, res: Response) => {
+//     try {
+//         const userId = new Types.ObjectId(req.user!.id);
+
+//         const followers = await Follow.find({ followingId: userId });
+
+//         const followerIds = followers.map(f => f.followerId);
+
+//         const users = await User.find({ _id: { $in: followerIds } })
+//             .select("username displayName avatar");
+
+//         return res.json(users);
+//     } catch {
+//         return res.status(500).json({ message: "Failed to fetch followers" });
+//     }
+// };
+
 export const getFollowers = async (req: Request, res: Response) => {
-    try {
-        const userId = new Types.ObjectId(req.user!.id);
+  try {
+    const userId = new Types.ObjectId(req.user!.id);
 
-        const followers = await Follow.find({ followingId: userId });
+    // Users who follow me
+    const followers = await Follow.find({ followingId: userId });
+    const followerIds = followers.map(f => f.followerId);
 
-        const followerIds = followers.map(f => f.followerId);
+    // Users I follow
+    const following = await Follow.find({ followerId: userId });
+    const followingIds = following.map(f => f.followingId.toString());
 
-        const users = await User.find({ _id: { $in: followerIds } })
-            .select("username displayName avatar");
+    const users = await User.find({ _id: { $in: followerIds } })
+      .select("username displayName avatar");
 
-        return res.json(users);
-    } catch {
-        return res.status(500).json({ message: "Failed to fetch followers" });
-    }
+    const result = users.map(user => ({
+      ...user.toObject(),
+      isMutual: followingIds.includes(user._id.toString()),
+    }));
+
+    return res.json(result);
+  } catch {
+    return res.status(500).json({ message: "Failed to fetch followers" });
+  }
 };
 
+// export const getFollowing = async (req: Request, res: Response) => {
+//     try {
+//         const userId = new Types.ObjectId(req.user!.id);
+
+//         const following = await Follow.find({ followerId: userId });
+
+//         const followingIds = following.map(f => f.followingId);
+
+//         const users = await User.find({ _id: { $in: followingIds } })
+//             .select("username displayName avatar");
+
+//         return res.json(users);
+//     } catch {
+//         return res.status(500).json({ message: "Failed to fetch following" });
+//     }
+// };
+
 export const getFollowing = async (req: Request, res: Response) => {
-    try {
-        const userId = new Types.ObjectId(req.user!.id);
+  try {
+    const userId = new Types.ObjectId(req.user!.id);
 
-        const following = await Follow.find({ followerId: userId });
+    // Users I follow
+    const following = await Follow.find({ followerId: userId });
+    const followingIds = following.map(f => f.followingId);
 
-        const followingIds = following.map(f => f.followingId);
+    // Users who follow me
+    const followers = await Follow.find({ followingId: userId });
+    const followerIds = followers.map(f => f.followerId.toString());
 
-        const users = await User.find({ _id: { $in: followingIds } })
-            .select("username displayName avatar");
+    const users = await User.find({ _id: { $in: followingIds } })
+      .select("username displayName avatar");
 
-        return res.json(users);
-    } catch {
-        return res.status(500).json({ message: "Failed to fetch following" });
-    }
+    const result = users.map(user => ({
+      ...user.toObject(),
+      isMutual: followerIds.includes(user._id.toString()),
+    }));
+
+    return res.json(result);
+  } catch {
+    return res.status(500).json({ message: "Failed to fetch following" });
+  }
 };

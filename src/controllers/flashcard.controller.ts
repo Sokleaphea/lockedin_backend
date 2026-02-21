@@ -75,9 +75,43 @@ export async function getFlashcardSets(req: Request, res: Response) {
   );
 }
 
+// export async function getFlashcardSet(req: Request, res: Response) {
+//   const userId = new Types.ObjectId((req as any).user.id);
+//   const { id } = req.params;
+
+//   const set = await FlashcardSetModel.findOne({
+//     _id: id,
+//     userId,
+//   });
+
+//   if (!set) {
+//     return res.status(404).json({ message: "Flashcard set not found" });
+//   }
+
+//   const cards = await FlashcardCardModel.find({
+//     flashcardSetId: set._id,
+//   });
+
+//   return res.json({
+//     _id: set._id,
+//     title: set.title,
+//     cards,
+//   });
+// }
+
 export async function getFlashcardSet(req: Request, res: Response) {
   const userId = new Types.ObjectId((req as any).user.id);
-  const { id } = req.params;
+  const rawId = req.params.id;
+
+  if (!rawId || Array.isArray(rawId) || !Types.ObjectId.isValid(rawId)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
+
+  const id = rawId;
+
+  if (!Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
 
   const set = await FlashcardSetModel.findOne({
     _id: id,
@@ -99,10 +133,67 @@ export async function getFlashcardSet(req: Request, res: Response) {
   });
 }
 
+// export async function updateFlashcardSet(req: Request, res: Response) {
+//   const userId = new Types.ObjectId((req as any).user.id);
+//   const { id } = req.params;
+//   const { title, addCards, updateCards, deleteCardIds } = req.body;
+
+//   const set = await FlashcardSetModel.findOne({ _id: id, userId });
+//   if (!set) {
+//     return res.status(404).json({ message: "Flashcard set not found" });
+//   }
+
+//   if (title !== undefined) {
+//     if (title.trim() === "") {
+//       return res.status(400).json({ message: "Title cannot be empty" });
+//     }
+//     set.title = title;
+//     await set.save();
+//   }
+
+//   if (Array.isArray(addCards)) {
+//     await FlashcardCardModel.insertMany(
+//       addCards.map((c) => ({
+//         flashcardSetId: set._id,
+//         front: c.front,
+//         back: c.back,
+//       }))
+//     );
+//   }
+
+//   if (Array.isArray(updateCards)) {
+//     for (const card of updateCards) {
+//       await FlashcardCardModel.updateOne(
+//         { _id: card._id, flashcardSetId: set._id },
+//         { front: card.front, back: card.back }
+//       );
+//     }
+//   }
+
+//   if (Array.isArray(deleteCardIds)) {
+//     await FlashcardCardModel.deleteMany({
+//       _id: { $in: deleteCardIds },
+//       flashcardSetId: set._id,
+//     });
+//   }
+
+//   return res.json({ message: "Flashcard set updated" });
+// }
+
 export async function updateFlashcardSet(req: Request, res: Response) {
   const userId = new Types.ObjectId((req as any).user.id);
-  const { id } = req.params;
   const { title, addCards, updateCards, deleteCardIds } = req.body;
+  const rawId = req.params.id;
+
+  if (!rawId || Array.isArray(rawId) || !Types.ObjectId.isValid(rawId)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
+
+  const id = rawId;
+
+  if (!Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
 
   const set = await FlashcardSetModel.findOne({ _id: id, userId });
   if (!set) {
@@ -118,6 +209,14 @@ export async function updateFlashcardSet(req: Request, res: Response) {
   }
 
   if (Array.isArray(addCards)) {
+    for (const card of addCards) {
+      if (!card.front || !card.back) {
+        return res.status(400).json({
+          message: "Card front and back are required",
+        });
+      }
+    }
+
     await FlashcardCardModel.insertMany(
       addCards.map((c) => ({
         flashcardSetId: set._id,
@@ -129,6 +228,12 @@ export async function updateFlashcardSet(req: Request, res: Response) {
 
   if (Array.isArray(updateCards)) {
     for (const card of updateCards) {
+      if (!card._id || !card.front || !card.back) {
+        return res.status(400).json({
+          message: "Card _id, front and back are required",
+        });
+      }
+
       await FlashcardCardModel.updateOne(
         { _id: card._id, flashcardSetId: set._id },
         { front: card.front, back: card.back }
@@ -146,9 +251,39 @@ export async function updateFlashcardSet(req: Request, res: Response) {
   return res.json({ message: "Flashcard set updated" });
 }
 
+// export async function deleteFlashcardSet(req: Request, res: Response) {
+//   const userId = new Types.ObjectId((req as any).user.id);
+//   const { id } = req.params;
+
+//   const set = await FlashcardSetModel.findOneAndDelete({
+//     _id: id,
+//     userId,
+//   });
+
+//   if (!set) {
+//     return res.status(404).json({ message: "Flashcard set not found" });
+//   }
+
+//   await FlashcardCardModel.deleteMany({
+//     flashcardSetId: set._id,
+//   });
+
+//   return res.json({ message: "Flashcard set deleted" });
+// }
+
 export async function deleteFlashcardSet(req: Request, res: Response) {
   const userId = new Types.ObjectId((req as any).user.id);
-  const { id } = req.params;
+  const rawId = req.params.id;
+
+  if (!rawId || Array.isArray(rawId) || !Types.ObjectId.isValid(rawId)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
+
+  const id = rawId;
+
+  if (!Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid flashcard set id" });
+  }
 
   const set = await FlashcardSetModel.findOneAndDelete({
     _id: id,

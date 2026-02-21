@@ -45,7 +45,7 @@ export async function createPomodoroSession(
   });
 
 // Send success response
-  return res.status(200).json({
+  return res.status(201).json({
     success: true,
     message: "Session saved successfully",
   });
