@@ -133,6 +133,7 @@ export const createPrivateChannel = async (
     });
 
     await channel.create();
+    // await channel.create({ skip_push: true });
 
     return res.status(200).json({
       channelId,
