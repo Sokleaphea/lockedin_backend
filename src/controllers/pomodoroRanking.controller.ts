@@ -1,43 +1,3 @@
-// import { Request, Response } from "express";
-// import { Types } from "mongoose";
-// import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
-// import { Follow } from "../models/follow.model";
-
-// export async function getPomodoroRanking(req: Request, res: Response) {
-//   try {
-//     const userId = new Types.ObjectId(req.user!.id);
-
-//     // 1️⃣ Get users I am following
-//     const following = await Follow.find({ followerId: userId });
-
-//     const followingIds = following.map(f => f.followingId);
-
-//     // 2️⃣ Include myself in ranking
-//     const rankingUserIds = [userId, ...followingIds];
-
-//     // 3️⃣ Aggregate focus time
-//     const ranking = await PomodoroFocusSessionModel.aggregate([
-//       {
-//         $match: { userId: { $in: rankingUserIds } },
-//       },
-//       {
-//         $group: {
-//           _id: "$userId",
-//           totalSeconds: { $sum: "$durationSeconds" },
-//         },
-//       },
-//       {
-//         $sort: { totalSeconds: -1 },
-//       },
-//     ]);
-
-//     return res.json(ranking);
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: "Failed to fetch ranking" });
-//   }
-// }
-
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
@@ -114,3 +74,61 @@ export async function getPomodoroRanking(req: Request, res: Response) {
 
 
 }
+
+// export async function getPomodoroRanking(req: Request, res: Response) {
+//   try {
+//     const userId = new Types.ObjectId(req.user!.id);
+
+//     const following = await Follow.find({ followerId: userId });
+//     const followers = await Follow.find({ followingId: userId });
+
+//     const followingIds = following.map(f => f.followingId.toString());
+//     const followerIds = followers.map(f => f.followerId.toString());
+
+//     const mutualIds = followingIds.filter(id =>
+//       followerIds.includes(id)
+//     );
+
+//     const mutualObjectIds = mutualIds.map(id => new Types.ObjectId(id));
+
+//     const rankingUserIds = [userId, ...mutualObjectIds];
+
+//     // Aggregate focus time
+//     const sessionTotals = await PomodoroFocusSessionModel.aggregate([
+//       {
+//         $match: { userId: { $in: rankingUserIds } },
+//       },
+//       {
+//         $group: {
+//           _id: "$userId",
+//           totalSeconds: { $sum: "$durationSeconds" },
+//         },
+//       },
+//     ]);
+
+//     const totalsMap = Object.fromEntries(
+//       sessionTotals.map(r => [r._id.toString(), r.totalSeconds])
+//     );
+
+//     const users = await Follow.db.collection("users")
+//       .find({ _id: { $in: rankingUserIds } })
+//       .toArray();
+
+//     const ranking = users.map(user => ({
+//       totalSeconds: totalsMap[user._id.toString()] || 0,
+//       user: {
+//         _id: user._id,
+//         username: user.username,
+//         displayName: user.displayName,
+//         avatar: user.avatar,
+//       },
+//     }));
+
+//     ranking.sort((a, b) => b.totalSeconds - a.totalSeconds);
+
+//     return res.json(ranking);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Failed to fetch ranking" });
+//   }
+// }
