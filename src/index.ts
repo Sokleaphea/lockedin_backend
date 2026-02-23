@@ -13,6 +13,7 @@ import followRoute from "./routes/follow.route";
 import { connectDB } from "./config/db";
 import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
+import privateChatRoute from "./routes/privatechat.route";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use("/api/setting", settingRoute);
 app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
 app.use("/api/follow", followRoute);
+app.use("/api/privatechat", privateChatRoute);
 
 
 (async () => {
