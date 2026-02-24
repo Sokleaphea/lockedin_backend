@@ -16,30 +16,13 @@ import { getBooks } from "../controllers/books.controller";
 const router = Router();
 
 // Public routes (no auth required)
-router.get("/", getBooks);
-router.get("/:bookId/reviews", getBookReviews);
-
-// Protected routes (auth required)
-router.use(authMiddleware);
-
-// Favorites routes
-router.post("/favorites", addFavorite);
-router.get("/favorites", getFavorites);
-router.delete("/favorites/:bookId", removeFavorite);
-
-// Reviews routes
-router.post("/:bookId/reviews", createReview);
-router.put("/reviews/:reviewId", updateReview);
-router.delete("/reviews/:reviewId", deleteReview);
-
-export default router;
 
 /**
  * @swagger
  * /api/books:
  *   get:
  *     summary: Search and retrieve books
- *     description: Fetches books from the Gutendex API with optional search and category filtering. Results are cached for 5 minutes.
+ *     description: Fetches books from the Gutendex API with optional search and category filtering
  *     tags: [Books]
  *     parameters:
  *       - in: query
@@ -47,7 +30,7 @@ export default router;
  *         schema:
  *           type: string
  *         description: Search query to find books by title or author
- *         example: "biology"
+ *         example: "dickens"
  *       - in: query
  *         name: category
  *         schema:
@@ -57,142 +40,20 @@ export default router;
  *     responses:
  *       200:
  *         description: Successfully retrieved books
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: number
- *                   title:
- *                     type: string
- *                   authors:
- *                     type: array
- *                     items:
- *                       type: string
- *                   summary:
- *                     type: string
- *                   categories:
- *                     type: array
- *                     items:
- *                       type: string
- *                   downloadCount:
- *                     type: number
  *       503:
  *         description: Book service temporarily unavailable
  *       500:
  *         description: Server error
- *
- * /api/books/favorites:
- *   post:
- *     summary: Add a book to favorites
- *     description: Adds a book to the authenticated user's favorites list. Duplicate favorites are prevented.
- *     tags: [Favorites]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               bookId:
- *                 type: number
- *                 description: The Gutendex book ID
- *                 example: 84
- *             required:
- *               - bookId
- *     responses:
- *       201:
- *         description: Book added to favorites
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Book added to favorites"
- *       400:
- *         description: Invalid bookId or book already in favorites
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- *
- *   get:
- *     summary: Get user's favorite books
- *     description: Retrieves all favorite books for the authenticated user, sorted by most recently added.
- *     tags: [Favorites]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Successfully retrieved favorites
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                   userId:
- *                     type: string
- *                   bookId:
- *                     type: number
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- *
- * /api/books/favorites/{bookId}:
- *   delete:
- *     summary: Remove a book from favorites
- *     description: Removes a book from the authenticated user's favorites list.
- *     tags: [Favorites]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: bookId
- *         required: true
- *         schema:
- *           type: number
- *         description: The Gutendex book ID to remove
- *         example: 84
- *     responses:
- *       200:
- *         description: Book removed from favorites
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Book removed from favorites"
- *       400:
- *         description: Invalid bookId
- *       404:
- *         description: Favorite not found
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- *
+ */
+router.get("/", getBooks);
+
+/**
+ * @swagger
  * /api/books/{bookId}/reviews:
  *   get:
- *     summary: Get reviews for a book
- *     description: Retrieves all reviews for a specific book, with user info populated.
- *     tags: [Reviews]
+ *     summary: Get all reviews for a book
+ *     description: Review - Retrieves all reviews for a specific book, with user info populated
+ *     tags: [Books]
  *     parameters:
  *       - in: path
  *         name: bookId
@@ -204,47 +65,77 @@ export default router;
  *     responses:
  *       200:
  *         description: Successfully retrieved reviews
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                   userId:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       username:
- *                         type: string
- *                       displayName:
- *                         type: string
- *                       avatar:
- *                         type: string
- *                   bookId:
- *                     type: number
- *                   rating:
- *                     type: number
- *                   feedback:
- *                     type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
  *       400:
  *         description: Invalid bookId
  *       500:
  *         description: Server error
- *
+ */
+router.get("/:bookId/reviews", getBookReviews);
+
+// Protected routes (auth required)
+router.use(authMiddleware);
+
+// Favorites routes
+
+/**
+ * @swagger
+ * /api/books/favorites:
  *   post:
- *     summary: Create a review for a book
- *     description: Adds a review for a specific book. Each user can only review a book once.
- *     tags: [Reviews]
+ *     summary: Add book to favorites
+ *     description: Favorite - Adds a book to the authenticated user's favorites list
+ *     tags: [Books]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bookId:
+ *                 type: number
+ *                 example: 84
+ *             required:
+ *               - bookId
+ *     responses:
+ *       201:
+ *         description: Book added to favorites
+ *       400:
+ *         description: Invalid bookId or book already in favorites
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post("/favorites", addFavorite);
+
+/**
+ * @swagger
+ * /api/books/favorites:
+ *   get:
+ *     summary: Get user's favorite books
+ *     description: Favorite - Retrieves all favorite books for the authenticated user
+ *     tags: [Books]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved favorites
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/favorites", getFavorites);
+
+/**
+ * @swagger
+ * /api/books/favorites/{bookId}:
+ *   delete:
+ *     summary: Remove book from favorites
+ *     description: Favorite - Removes a book from the authenticated user's favorites list
+ *     tags: [Books]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -253,7 +144,38 @@ export default router;
  *         required: true
  *         schema:
  *           type: number
- *         description: The Gutendex book ID
+ *         example: 84
+ *     responses:
+ *       200:
+ *         description: Book removed from favorites
+ *       400:
+ *         description: Invalid bookId
+ *       404:
+ *         description: Favorite not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.delete("/favorites/:bookId", removeFavorite);
+
+// Reviews routes
+
+/**
+ * @swagger
+ * /api/books/{bookId}/reviews:
+ *   post:
+ *     summary: Create a book review
+ *     description: Review - Adds a review for a specific book. Each user can only review a book once
+ *     tags: [Books]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookId
+ *         required: true
+ *         schema:
+ *           type: number
  *         example: 84
  *     requestBody:
  *       required: true
@@ -282,12 +204,16 @@ export default router;
  *         description: Unauthorized
  *       500:
  *         description: Server error
- *
+ */
+router.post("/:bookId/reviews", createReview);
+
+/**
+ * @swagger
  * /api/books/reviews/{reviewId}:
- *   put:
- *     summary: Update a review
- *     description: Updates an existing review. Only the review owner can update it.
- *     tags: [Reviews]
+ *   patch:
+ *     summary: Update a book review
+ *     description: Review - Updates an existing review. Only the review owner can update it
+ *     tags: [Books]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -323,11 +249,16 @@ export default router;
  *         description: Unauthorized
  *       500:
  *         description: Server error
- *
+ */
+router.patch("/reviews/:reviewId", updateReview);
+
+/**
+ * @swagger
+ * /api/books/reviews/{reviewId}:
  *   delete:
- *     summary: Delete a review
- *     description: Deletes an existing review. Only the review owner can delete it.
- *     tags: [Reviews]
+ *     summary: Delete a book review
+ *     description: Review - Deletes an existing review. Only the review owner can delete it
+ *     tags: [Books]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -349,3 +280,6 @@ export default router;
  *       500:
  *         description: Server error
  */
+router.delete("/reviews/:reviewId", deleteReview);
+
+export default router;
