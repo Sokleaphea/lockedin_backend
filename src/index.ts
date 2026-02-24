@@ -14,6 +14,7 @@ import { connectDB } from "./config/db";
 import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import privateChatRoute from "./routes/privatechat.route";
+import booksRoute from "./routes/books.route";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,7 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
 app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
+app.use("/api/books", booksRoute);
 
 
 (async () => {
