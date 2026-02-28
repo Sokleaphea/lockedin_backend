@@ -15,6 +15,8 @@ import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import privateChatRoute from "./routes/privatechat.route";
 import bookRoute from "./routes/books.route";
+import groupChatRoute from "./routes/groupchat.route";
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +46,7 @@ app.use("/api/ai", aiRoute);
 app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
 app.use("/api/books", bookRoute);
+app.use("/api/groupchat", groupChatRoute);
 
 (async () => {
   try {
