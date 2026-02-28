@@ -3,6 +3,7 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 import {
   generatePrivateChatToken,
   createPrivateChannel,
+  getPrivateChats,
 } from "../controllers/privatechat.controller";
 
 const router = Router();
@@ -10,6 +11,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post("/token", generatePrivateChatToken);
+router.get("/", getPrivateChats);
 router.post("/channel", createPrivateChannel);
 
 export default router;
@@ -117,4 +119,32 @@ export default router;
  *         description: Unauthorized
  *       500:
  *         description: Server error
+ */
+/**
+ * @swagger
+ * /api/privatechat:
+ *   get:
+ *     summary: Get all private chats for authenticated user
+ *     tags:
+ *       - PrivateChat
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of private chats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   chatId:
+ *                     type: string
+ *                   channelId:
+ *                     type: string
+ *                   otherUserId:
+ *                     type: string
+ *       401:
+ *         description: Unauthorized
  */
