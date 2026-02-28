@@ -36,7 +36,7 @@ router.patch("/profile/avatar", authMiddleware, upload.single("avatar"), async (
         user.avatar = imageUrl;
         await user.save();
         res.json({ message: "Avatar updated", avatar: user.avatar});
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({ message: "Failed to upload avatar", error: err.message || err });
     }
 });
