@@ -17,6 +17,7 @@ import swaggerUi from "swagger-ui-express";
 import privateChatRoute from "./routes/privatechat.route";
 import bookRoute from "./routes/books.route";
 import groupChatRoute from "./routes/groupchat.route";
+import streakRoute from "./routes/streak.route"
 
 
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
 app.use("/api/books", bookRoute);
 app.use("/api/groupchat", groupChatRoute);
+app.use("/api/streak", streakRoute);
 
 (async () => {
   try {
