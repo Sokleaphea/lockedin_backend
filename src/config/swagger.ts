@@ -22,7 +22,7 @@ const options = {
                     bearerFormat: "JWT",
                 }
             },
-            schema: {
+            schemas: {
                 User: {
                     type: "object",
                     properties: {
@@ -46,6 +46,9 @@ const options = {
                         password: { 
                             type: "string", 
                         },
+                        avatar: {
+                            type: "string",
+                        }
                     }
                 },
                 Task: {

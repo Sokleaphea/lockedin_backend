@@ -27,6 +27,9 @@ const userSchema = new Schema(
         avatar: {
             type: String,
         },
+        avatarPublicId: {
+            type: String,
+        },
         bio: {
             type: String,
             maxLength: 160,
@@ -41,6 +44,10 @@ const userSchema = new Schema(
         },
         resetOTPExpires: {
             type: Date,
+        },
+        lastUsernameUpdate: {
+            type: Date,
+            default: null,
         }
     },
     { timestamps: true}
