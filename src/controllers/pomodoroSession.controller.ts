@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PomodoroFocusSessionModel } from "../models/pomodoroFocusSession.model";
 import { Types } from "mongoose";
+import { updateStreakAfterFocus } from "../services/streak.service";
 
 // Handles creation of a pomodoro session.
 // Only "focus" sessions are saved.
@@ -8,16 +9,16 @@ export async function createPomodoroSession(
   req: Request,
   res: Response
 ) {
-// TEMP: hardcoded user ID.
-// In production, this will come from auth middleware (req.user.id)
+  // TEMP: hardcoded user ID.
+  // In production, this will come from auth middleware (req.user.id)
   const userId = new Types.ObjectId((req as any).user.id);
 
-// Extract session type and duration from request body
+  // Extract session type and duration from request body
   const { type, durationSeconds } = req.body;
 
-// Validate duration:
-// - Must be a number
-// - Must be greater than 0
+  // Validate duration:
+  // - Must be a number
+  // - Must be greater than 0
   if (
     typeof durationSeconds !== "number" ||
     durationSeconds <= 0
@@ -28,8 +29,8 @@ export async function createPomodoroSession(
     });
   }
 
-// Ignore non-focus sessions (e.g. break sessions).
-// They are acknowledged but NOT saved.
+  // Ignore non-focus sessions (e.g. break sessions).
+  // They are acknowledged but NOT saved.
   if (type !== "focus") {
     return res.status(200).json({
       success: true,
@@ -37,14 +38,27 @@ export async function createPomodoroSession(
     });
   }
 
-// Persist the focus session to the database
+  // Persist the focus session to the database
   await PomodoroFocusSessionModel.create({
     userId,
     durationSeconds,
     completedAt: new Date(), // mark when session was completed
   });
 
-// Send success response
+  // add to streak 
+  await PomodoroFocusSessionModel.create({
+    userId,
+    durationSeconds,
+    completedAt: new Date(),
+  });
+
+  try {
+    await updateStreakAfterFocus(userId, durationSeconds);
+  } catch (err) {
+    console.error("Streak update failed:", err);
+  }
+
+  // Send success response
   return res.status(201).json({
     success: true,
     message: "Session saved successfully",

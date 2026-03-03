@@ -15,86 +15,85 @@ export async function getPomodoroRanking(req: Request, res: Response) {
     const followers = await Follow.find({ followingId: userId });
     const followerIds = followers.map(f => f.followerId.toString());
 
-    // 3️⃣ Find mutuals (intersection)
+    // 3️⃣ Mutuals
     const mutualIds = followingIds.filter(id =>
       followerIds.includes(id)
     );
 
-    // 4️⃣ Convert back to ObjectId
     const mutualObjectIds = mutualIds.map(id => new Types.ObjectId(id));
 
-    // 5️⃣ Include myself
+    // 4️⃣ Include myself
     const rankingUserIds = [userId, ...mutualObjectIds];
 
-    // 6️⃣ Aggregate focus time
-    const ranking = await PomodoroFocusSessionModel.aggregate([
+    // 5️⃣ Aggregate starting from users (NOT sessions)
+    const ranking = await Follow.db.collection("users").aggregate([
       {
-        $match: { userId: { $in: rankingUserIds } },
-      },
-      {
-        $group: {
-          _id: "$userId",
-          totalSeconds: { $sum: "$durationSeconds" },
-        },
+        $match: { _id: { $in: rankingUserIds } },
       },
       {
         $lookup: {
-          from: "users",              // collection name
+          from: "pomodorofocussessions",
           localField: "_id",
-          foreignField: "_id",
-          as: "user",
+          foreignField: "userId",
+          as: "sessions",
         },
       },
       {
-        $unwind: "$user",
+        $addFields: {
+          totalSeconds: {
+            $sum: "$sessions.durationSeconds",
+          },
+        },
       },
       {
         $project: {
           _id: 0,
-          totalSeconds: 1,
+          totalSeconds: { $ifNull: ["$totalSeconds", 0] },
           user: {
-            _id: "$user._id",
-            username: "$user.username",
-            displayName: "$user.displayName",
-            avatar: "$user.avatar",
-          }
-        }
+            _id: "$_id",
+            username: "$username",
+            displayName: "$displayName",
+            avatar: "$avatar",
+          },
+        },
       },
       {
         $sort: { totalSeconds: -1 },
       },
-    ]);
-
+    ]).toArray();
 
     return res.json(ranking);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to fetch ranking" });
   }
-
-
 }
 
 // export async function getPomodoroRanking(req: Request, res: Response) {
 //   try {
 //     const userId = new Types.ObjectId(req.user!.id);
 
+//     // 1️⃣ Users I follow
 //     const following = await Follow.find({ followerId: userId });
-//     const followers = await Follow.find({ followingId: userId });
-
 //     const followingIds = following.map(f => f.followingId.toString());
+
+//     // 2️⃣ Users who follow me
+//     const followers = await Follow.find({ followingId: userId });
 //     const followerIds = followers.map(f => f.followerId.toString());
 
+//     // 3️⃣ Find mutuals (intersection)
 //     const mutualIds = followingIds.filter(id =>
 //       followerIds.includes(id)
 //     );
 
+//     // 4️⃣ Convert back to ObjectId
 //     const mutualObjectIds = mutualIds.map(id => new Types.ObjectId(id));
 
+//     // 5️⃣ Include myself
 //     const rankingUserIds = [userId, ...mutualObjectIds];
 
-//     // Aggregate focus time
-//     const sessionTotals = await PomodoroFocusSessionModel.aggregate([
+//     // 6️⃣ Aggregate focus time
+//     const ranking = await PomodoroFocusSessionModel.aggregate([
 //       {
 //         $match: { userId: { $in: rankingUserIds } },
 //       },
@@ -104,31 +103,40 @@ export async function getPomodoroRanking(req: Request, res: Response) {
 //           totalSeconds: { $sum: "$durationSeconds" },
 //         },
 //       },
+//       {
+//         $lookup: {
+//           from: "users",              // collection name
+//           localField: "_id",
+//           foreignField: "_id",
+//           as: "user",
+//         },
+//       },
+//       {
+//         $unwind: "$user",
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           totalSeconds: 1,
+//           user: {
+//             _id: "$user._id",
+//             username: "$user.username",
+//             displayName: "$user.displayName",
+//             avatar: "$user.avatar",
+//           }
+//         }
+//       },
+//       {
+//         $sort: { totalSeconds: -1 },
+//       },
 //     ]);
 
-//     const totalsMap = Object.fromEntries(
-//       sessionTotals.map(r => [r._id.toString(), r.totalSeconds])
-//     );
-
-//     const users = await Follow.db.collection("users")
-//       .find({ _id: { $in: rankingUserIds } })
-//       .toArray();
-
-//     const ranking = users.map(user => ({
-//       totalSeconds: totalsMap[user._id.toString()] || 0,
-//       user: {
-//         _id: user._id,
-//         username: user.username,
-//         displayName: user.displayName,
-//         avatar: user.avatar,
-//       },
-//     }));
-
-//     ranking.sort((a, b) => b.totalSeconds - a.totalSeconds);
 
 //     return res.json(ranking);
 //   } catch (error) {
 //     console.error(error);
 //     return res.status(500).json({ message: "Failed to fetch ranking" });
 //   }
+
+
 // }

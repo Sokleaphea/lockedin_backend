@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./types/express";
 import express from "express";
 import cors from "cors";
 import "./config/cloudinary";
@@ -15,14 +16,19 @@ import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import privateChatRoute from "./routes/privatechat.route";
 import userRoute from "./routes/user.route";
+import bookRoute from "./routes/books.route";
+import groupChatRoute from "./routes/groupchat.route";
+import streakRoute from "./routes/streak.route"
+
+
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 // Configure CORS before routes
 app.use(cors({
-  origin: ["http://localhost:58016", "http://localhost:3000", "http://localhost:50816"], // Support multiple origins
+  origin: true, // Allow all origins (mobile app sends requests, not a browser)
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept"],
 }));
 
@@ -44,12 +50,15 @@ app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
 app.use("/api/user", userRoute);
 
+app.use("/api/books", bookRoute);
+app.use("/api/groupchat", groupChatRoute);
+app.use("/api/streak", streakRoute);
 
 (async () => {
   try {
     await connectDB();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`✅ Server running at http://localhost:${PORT}`);
       console.log("Groq key loaded:", process.env.GROQ_API_KEY?.slice(0, 6));
 

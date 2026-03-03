@@ -1,6 +1,9 @@
+import "dotenv/config";
 import { version } from "node:os";
 import { title } from "node:process";
 import swaggerJSDoc from "swagger-jsdoc";
+
+const PORT = process.env.PORT || 5000;
 
 const options = {
     definition: {
@@ -11,7 +14,7 @@ const options = {
         },
         servers: [
             {
-                url: "http://localhost:3001",
+                url: `http://localhost:${PORT}`,
             },
         ],
         components: {

@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 import User from "../models/user.model";
 import { Follow } from "../models/follow.model";
 import { streamServerClient } from "../config/stream";
+import { PrivateChat } from "../models/privateChat.model";
+
 
 /**
  * POST /api/privatechat/token
@@ -73,7 +75,7 @@ export const createPrivateChannel = async (
       return res.status(404).json({ message: "Target user not found" });
     }
 
-    // 🔐 Mutual follow validation
+    // Mutual follow validation
     const isFollowing = await Follow.findOne({
       followerId: currentUserId,
       followingId: targetId,
@@ -90,59 +92,89 @@ export const createPrivateChannel = async (
       });
     }
 
-    // Deterministic channel ID
-    const ids = [
-      currentUserId.toString(),
-      targetId.toString(),
-    ].sort();
+    // Sort members deterministically
+    const sortedMembers = [
+      currentUserId,
+      targetId,
+    ].sort((a, b) => a.toString().localeCompare(b.toString()));
 
-    const channelId = `private-${ids[0]}-${ids[1]}`;
+    // Check if private chat already exists in Mongo
+    let privateChat = await PrivateChat.findOne({
+      members: sortedMembers,
+    });
 
-    // const channel = streamServerClient.channel("messaging", channelId, {
-    //   members: ids,
-    //   created_by_id: currentUserId.toString(),
-    // });
+    if (!privateChat) {
+      privateChat = await PrivateChat.create({
+        members: sortedMembers,
+      });
+    }
 
-    // await channel.create();
+    const channelId = `private-${sortedMembers[0]}-${sortedMembers[1]}`;
 
-    // Upsert both users to Stream first
-    const currentUser = await User.findById(currentUserId).select(
-      "username displayName avatar"
+    // Upsert users in Stream
+    const users = await User.find({
+      _id: { $in: sortedMembers },
+    }).select("username displayName avatar");
+
+    await streamServerClient.upsertUsers(
+      users.map((user) => ({
+        id: user._id.toString(),
+        name: user.displayName || user.username,
+        image: user.avatar || undefined,
+      }))
     );
-
-    const targetUserFull = await User.findById(targetId).select(
-      "username displayName avatar"
-    );
-
-    await streamServerClient.upsertUsers([
-      {
-        id: currentUser!._id.toString(),
-        name: currentUser!.displayName || currentUser!.username,
-        image: currentUser!.avatar || undefined,
-      },
-      {
-        id: targetUserFull!._id.toString(),
-        name: targetUserFull!.displayName || targetUserFull!.username,
-        image: targetUserFull!.avatar || undefined,
-      },
-    ]);
 
     const channel = streamServerClient.channel("messaging", channelId, {
-      members: ids,
+      members: sortedMembers.map((id) => id.toString()),
       created_by_id: currentUserId.toString(),
     });
 
     await channel.create();
-    // await channel.create({ skip_push: true });
 
     return res.status(200).json({
+      chatId: privateChat._id,
       channelId,
     });
   } catch (error) {
     console.error("Private channel error:", error);
-    // console.error("Private channel error:", error.response?.data || error);
     return res.status(500).json({
       message: "Failed to create private channel",
+    });
+  }
+};
+
+export const getPrivateChats = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = new Types.ObjectId(req.user!.id);
+
+    const chats = await PrivateChat.find({
+      members: userId,
+    })
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    const formatted = chats.map((chat) => {
+      const members = chat.members.map((m) => m.toString());
+
+      const otherUserId = members.find(
+        (memberId) => memberId !== userId.toString()
+      );
+
+      return {
+        chatId: chat._id,
+        channelId: `private-${members[0]}-${members[1]}`,
+        otherUserId,
+      };
+    });
+
+    return res.status(200).json(formatted);
+  } catch (error) {
+    console.error("Get private chats error:", error);
+    return res.status(500).json({
+      message: "Failed to fetch private chats",
     });
   }
 };
