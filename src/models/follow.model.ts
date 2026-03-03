@@ -1,4 +1,5 @@
 import { Schema, model, Types } from "mongoose";
+import { ref } from "node:process";
 
 const followSchema = new Schema(
   {
@@ -6,11 +7,13 @@ const followSchema = new Schema(
       type: Types.ObjectId,
       required: true,
       index: true,
+      ref: "User"
     },
     followingId: {
       type: Types.ObjectId,
       required: true,
       index: true,
+      ref: "User"
     },
   },
   { timestamps: { createdAt: true, updatedAt: false } }

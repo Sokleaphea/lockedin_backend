@@ -15,6 +15,7 @@ import { connectDB } from "./config/db";
 import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import privateChatRoute from "./routes/privatechat.route";
+import userRoute from "./routes/user.route";
 import bookRoute from "./routes/books.route";
 import groupChatRoute from "./routes/groupchat.route";
 import streakRoute from "./routes/streak.route"
@@ -47,6 +48,8 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
 app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
+app.use("/api/user", userRoute);
+
 app.use("/api/books", bookRoute);
 app.use("/api/groupchat", groupChatRoute);
 app.use("/api/streak", streakRoute);
