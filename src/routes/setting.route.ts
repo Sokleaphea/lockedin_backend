@@ -127,21 +127,30 @@ router.patch("/profile/avatar", authMiddleware, upload.single("avatar"), async (
         user.avatar = result.secure_url;
         user.avatarPublicId = result.public_id;
         await user.save();
-        function extractPublicId(url: string): string {
-            const parts = url.split("/upload/")[1];     
-            const publicIdWithExt = parts.split(".")[0]; 
+        function extractPublicId(url?: string): string | null {
+            if (!url || typeof url !== "string") return null; // handle undefined or non-string
+            const parts = url.split("/upload/");
+            if (parts.length < 2 || !parts[1]) return null; // invalid format
+            const publicIdWithExt = parts[1].split(".")[0];
+            if (!publicIdWithExt) return null; // no publicId found
             return publicIdWithExt;
         }
 
         // delete past user's avatar that does'nt have avatar public id
-        const oldUsers = await User.find({ avatarPublicId: {$exists: false}, avatar: {$exists: true}});
+        const oldUsers = await User.find({ avatarPublicId: { $exists: false }, avatar: { $exists: true } });
+
         for (const u of oldUsers) {
-            if (!u.avatar) continue;
-            const publicId = extractPublicId(u.avatar); 
-            await cloudinary.uploader.destroy(publicId);
+            const publicId = extractPublicId(u.avatar!);
+            if (!publicId) continue; // skip invalid/malformed urls
+            try {
+                await cloudinary.uploader.destroy(publicId);
+            } catch (err) {
+                console.error("Failed to delete old avatar:", err);
+            }
         }
         res.json({ message: "Avatar updated", avatar: user.avatar});
     } catch (err) {
+        console.log("Logged error: ", err)
         res.status(500).json({ message: "Failed to upload avatar", err });
     }
 });
