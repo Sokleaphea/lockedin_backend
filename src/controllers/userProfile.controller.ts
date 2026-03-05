@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/user.model";
 import { Follow } from "../models/follow.model";
 import { UserStreakModel } from "../models/userStreak.model";
+import { formatStreak } from "../utils/streak";
 
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
@@ -16,24 +17,41 @@ export const getUserProfile = async (req: Request, res: Response) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+        // const [followersCount, followingCount] = await Promise.all([
+        //     Follow.countDocuments({ followerId: user._id }),
+        //     Follow.countDocuments({ followingId: user._id }),
+        // ]);
+        // gpt fix
         const [followersCount, followingCount] = await Promise.all([
-            Follow.countDocuments({followerId: user._id}),
-            Follow.countDocuments({followingId: user._id}),
+            Follow.countDocuments({ followingId: user._id }), // followers
+            Follow.countDocuments({ followerId: user._id }),  // following
         ]);
+        //gptfix
 
-        const isFollowing = myId ? await Follow.exists({ follower: myId, following: user._id}): false;
-        const streak = await UserStreakModel.findOne({ userId: user._id});
+        // const isFollowing = myId ? await Follow.exists({ follower: myId, following: user._id}): false;
+        // gtp fix
+        const isFollowing = myId
+            ? await Follow.exists({
+                followerId: myId,
+                followingId: user._id,
+            })
+            : false;
+        // gtp fix
+
+        const streak = await UserStreakModel.findOne({ userId: user._id });
         return res.json({
             username: user.username,
             displayName: user.displayName,
             bio: user.bio,
-            streak: {
-                currentStreak: streak?.currentStreak ?? 0,
-                longestStreak: streak?.longestStreak ?? 0,
-                totalGoalDays: streak?.totalGoalDays ?? 0,
-                dailyGoalSeconds: streak?.dailyGoalSeconds ?? 0,
-                todayAccumulatedSeconds: streak?.todayAccumulatedSeconds ?? 0,
-            },
+            avatar: user.avatar,
+            // streak: {
+            //     currentStreak: streak?.currentStreak ?? 0,
+            //     longestStreak: streak?.longestStreak ?? 0,
+            //     totalGoalDays: streak?.totalGoalDays ?? 0,
+            //     dailyGoalSeconds: streak?.dailyGoalSeconds ?? 0,
+            //     todayAccumulatedSeconds: streak?.todayAccumulatedSeconds ?? 0,
+            // },
+            streak: formatStreak(streak),
             stats: {
                 followers: followersCount,
                 following: followingCount
