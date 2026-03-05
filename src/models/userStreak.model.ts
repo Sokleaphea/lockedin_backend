@@ -11,7 +11,7 @@ const UserStreakSchema = new Schema({
   dailyGoalSeconds: {
     type: Number,
     required: true,
-    default: 1800, // 30 min default
+    default: 0, // 30 min default
   },
 
   currentStreak: {
