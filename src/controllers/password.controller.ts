@@ -20,13 +20,21 @@ export const sendOTP = async (req: Request, res: Response) => {
 
     const otp = generateOTP();
     user.resetOTP = crypto.createHash("sha256").update(otp).digest("hex");
-    user.resetOTPExpires = new Date(Date.now() + 10 * 60 * 100);
+    user.resetOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
     await sendEmail({
         to: user.email,
         subject: "Your OTP code",
-        text: `Your OTP is: ${otp}. Expires in 10 minutes`,
+        text: `Your OTP is: ${otp}.`,
+        html:`<h2>Welcome to LockedIn!</h2>
+            <p>Greeeting, ${user.username},</p>
+            <p>Please use the OTP below to verify your email address:</p>
+            <h3 style="color: #e1842d;">${otp}</h3>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this, you can ignore this email.</p>
+            <hr/>
+            <p>The LockedIn Team</p>`
     });
     res.json({ message: "OTP sent" });
 };
