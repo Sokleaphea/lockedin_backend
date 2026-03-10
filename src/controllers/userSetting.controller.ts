@@ -6,6 +6,7 @@ import { UserStreakModel } from "../models/userStreak.model";
 import { v2 as cloudinary } from "cloudinary";
 import { Todo } from "../models/todo.model";
 import { FlashcardCardModel } from "../models/flashcardCard.model";
+import { formatStreak } from "../utils/streak";
 
 export const getMyProfile = async (req: Request, res: Response) => {
     try {
@@ -16,7 +17,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        const streak = await UserStreakModel.findOne(userId)
+        const streak = await UserStreakModel.findOne({ userId })
 
         const followersCount = await Follow.countDocuments({
             followingId: userId,
@@ -26,20 +27,24 @@ export const getMyProfile = async (req: Request, res: Response) => {
             followerId: userId,
         });
 
-        const authProvider = user.password ? "Google" : "Email/Password";
+        // const authProvider = user.password ? "Google" : "Email/Password";
+        //gpt fix
+        const authProvider = user.googleId ? "Google" : "Email/Password";
+        //gpt fix
 
         return res.json({
             username: user.username,
             bio: user.bio,
             displayName: user.displayName,
             avatar: user.avatar,
-            streak: {
-                currentStreak: streak?.currentStreak ?? 0,
-                longestStreak: streak?.longestStreak ?? 0,
-                totalGoalDays: streak?.totalGoalDays ?? 0,
-                dailyGoalSeconds: streak?.dailyGoalSeconds ?? 0,
-                todayAccumulatedSeconds: streak?.todayAccumulatedSeconds ?? 0,
-            },
+            // streak: {
+            //     currentStreak: streak?.currentStreak ?? 0,
+            //     longestStreak: streak?.longestStreak ?? 0,
+            //     totalGoalDays: streak?.totalGoalDays ?? 0,
+            //     dailyGoalSeconds: streak?.dailyGoalSeconds ?? 0,
+            //     todayAccumulatedSeconds: streak?.todayAccumulatedSeconds ?? 0,
+            // },
+            streak: formatStreak(streak),
             authProvider,
             followersCount,
             followingCount,
@@ -65,19 +70,26 @@ export const updateMyProfile = async (req: Request, res: Response) => {
         const now = new Date();
         if (username !== undefined && username !== user.username) {
             if (
-                user.lastUsernameUpdate && now.getTime() - user.lastUsernameUpdate.getTime() < cooldownMs 
+                user.lastUsernameUpdate && now.getTime() - user.lastUsernameUpdate.getTime() < cooldownMs
             ) {
                 const nextAllowedDate = new Date(
                     user.lastUsernameUpdate.getTime() + cooldownMs
                 );
                 return res.status(400).json({
-                message: `You can change your username again on ${nextAllowedDate.toDateString()}`,
+                    message: `You can change your username again on ${nextAllowedDate.toDateString()}`,
                 });
             }
-            const existingUser = await User.findOne({ username });
+            // const existingUser = await User.findOne({ username });
+            // gpt fix
+            const existingUser = await User.findOne({
+                username,
+                _id: { $ne: user._id }
+            });
+            //gpt fix
+            
             if (existingUser) {
                 return res.status(400).json({
-                    message: "Users already taken"
+                    message: "Username already taken"
                 })
             }
             user.username = username;

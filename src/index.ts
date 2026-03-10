@@ -18,7 +18,9 @@ import privateChatRoute from "./routes/privatechat.route";
 import userRoute from "./routes/user.route";
 import bookRoute from "./routes/books.route";
 import groupChatRoute from "./routes/groupchat.route";
-import streakRoute from "./routes/streak.route"
+import streakRoute from "./routes/streak.route";
+import studyRoomRoute from "./routes/studyRoom.route";
+import { startCleanupJobs } from "./utils/cleanupRooms";
 
 
 const app = express();
@@ -52,10 +54,12 @@ app.use("/api/books", bookRoute);
 app.use("/api/groupchat", groupChatRoute);
 app.use("/api/streak", streakRoute);
 app.use("/api/user", userRoute);
+app.use("/api/study-rooms", studyRoomRoute);
 
 (async () => {
   try {
     await connectDB();
+    startCleanupJobs();
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`✅ Server running at http://localhost:${PORT}`);
