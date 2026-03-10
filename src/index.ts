@@ -50,11 +50,10 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/ai", aiRoute);
 app.use("/api/follow", followRoute);
 app.use("/api/privatechat", privateChatRoute);
-app.use("/api/user", userRoute);
-
 app.use("/api/books", bookRoute);
 app.use("/api/groupchat", groupChatRoute);
 app.use("/api/streak", streakRoute);
+app.use("/api/user", userRoute);
 app.use("/api/study-rooms", studyRoomRoute);
 
 (async () => {

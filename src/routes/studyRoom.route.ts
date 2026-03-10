@@ -6,6 +6,7 @@ import {
   leaveRoom,
 } from "../controllers/studyRoom.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { generateJitsiToken } from "../controllers/jistsiToken.controller";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.get("/", getActiveRooms);
 router.post("/", createRoom);
 router.post("/:roomId/join", joinRoom);
 router.post("/:roomId/leave", leaveRoom);
+router.post("/jitsi-token", generateJitsiToken);
 
 export default router;
 

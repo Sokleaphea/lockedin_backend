@@ -32,6 +32,7 @@ http://localhost:5000/api/books
 ### 3. **Review & Rating System**
 - Rate books (1-5 stars)
 - Write detailed feedback
+- Submit multiple reviews for the same book
 - Update/delete your own reviews
 - View all reviews for any book
 
@@ -102,9 +103,66 @@ GET http://localhost:5000/api/books?search=biology&category=science
 
 ---
 
+#### 2. Get Book Categories
+
+**Public** - No authentication required
+
+```http
+GET /api/books/categories
+```
+
+**Description:**
+Returns a deduplicated, alphabetically sorted list of clean book genre categories, normalized from Gutendex subjects. Results are **cached for 1 hour** for fast response.
+
+**Normalization Rules (applied server-side):**
+| Raw Gutendex Subject | Result |
+|---|---|
+| `"Science fiction"` | ✅ Kept as-is |
+| `"Gothic fiction"` | ✅ Kept as-is |
+| `"London (England) -- Fiction"` | ❌ Removed (location-specific) |
+| `"Ahab, Captain (Fictitious character) -- Fiction"` | ❌ Removed (character-specific) |
+| `"France -- History -- Revolution -- Fiction"` | ✅ Normalized → `"France"` |
+| `"Norwegian drama -- Translations into English"` | ✅ Normalized → `"Norwegian drama"` |
+| `"Wagner, Richard, 1813-1883"` | ❌ Removed (person name) |
+
+**Example Request:**
+
+```bash
+GET http://localhost:5000/api/books/categories
+```
+
+**Response Example:**
+
+```json
+[
+  "Adventure stories",
+  "Autobiographical fiction",
+  "Children's stories",
+  "Detective and mystery stories",
+  "Fantasy fiction",
+  "Gothic fiction",
+  "Historical fiction",
+  "Horror tales",
+  "Romance fiction",
+  "Science fiction",
+  "War stories",
+  "Young adult fiction"
+]
+```
+
+**Status Codes:**
+- `200` - Success
+- `500` - Server error
+- `503` - Gutendex API unavailable
+
+**Frontend Usage:**
+Call this once on app load to populate category filter dropdowns. Then pass the selected value to `GET /api/books?category=<value>` to filter books.
+
+---
+
 ### ⭐ Favorites Endpoints
 
-#### 2. Add Book to Favorites
+#### 3. Add Book to Favorites
 
 **Protected** - Requires authentication
 
@@ -141,7 +199,7 @@ Content-Type: application/json
 
 ---
 
-#### 3. Get User's Favorites
+#### 4. Get User's Favorites
 
 **Protected** - Requires authentication
 
@@ -179,7 +237,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-#### 4. Remove Book from Favorites
+#### 5. Remove Book from Favorites
 
 **Protected** - Requires authentication
 
@@ -216,7 +274,7 @@ DELETE http://localhost:5000/api/books/favorites/84
 
 ### 💬 Review Endpoints
 
-#### 5. Get Reviews for a Book
+#### 6. Get Reviews for a Book
 
 **Public** - No authentication required
 
@@ -258,7 +316,7 @@ GET http://localhost:5000/api/books/84/reviews
 
 ---
 
-#### 6. Create a Review
+#### 7. Create a Review
 
 **Protected** - Requires authentication
 
@@ -307,12 +365,12 @@ POST http://localhost:5000/api/books/84/reviews
 
 **Status Codes:**
 - `201` - Review created
-- `400` - Invalid input or duplicate review (one review per user per book)
+- `400` - Invalid input
 - `401` - Unauthorized
 
 ---
 
-#### 7. Update a Review
+#### 8. Update a Review
 
 **Protected** - Requires authentication (only review owner)
 
@@ -364,7 +422,7 @@ PATCH http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### 8. Delete a Review
+#### 9. Delete a Review
 
 **Protected** - Requires authentication (only review owner)
 
@@ -420,7 +478,19 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ### Thunder Client Test Examples
 
-#### Test 1: Search Books
+#### Test 1: Get Book Categories
+
+1. Open Thunder Client in VS Code
+2. **New Request**
+3. **Method**: `GET`
+4. **URL**: `http://localhost:5000/api/books/categories`
+5. Click **Send**
+
+**Expected Result:** Sorted array of clean genre names like `["Adventure stories", "Gothic fiction", "Science fiction", ...]`
+
+---
+
+#### Test 2: Search Books
 
 1. Open Thunder Client in VS Code
 2. **New Request**
@@ -450,7 +520,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 3: Create Review
+#### Test 4: Create Review
 
 1. **New Request**
 2. **Method**: `POST`
@@ -469,11 +539,11 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 4: Update Review
+#### Test 5: Update Review
 
 1. **New Request**
 2. **Method**: `PATCH`
-3. **URL**: `http://localhost:5000/api/books/reviews/{reviewId}` (use `_id` from Test 3)
+3. **URL**: `http://localhost:5000/api/books/reviews/{reviewId}` (use `_id` from Test 4)
 4. **Auth** tab → **Bearer Token** → Paste token
 5. **Body** tab → **JSON**:
    ```json
@@ -488,7 +558,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 5: Get All Reviews for a Book
+#### Test 6: Get All Reviews for a Book
 
 1. **New Request**
 2. **Method**: `GET`
@@ -499,7 +569,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 6: Get My Favorites
+#### Test 7: Get My Favorites
 
 1. **New Request**
 2. **Method**: `GET`
@@ -511,7 +581,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 7: Delete Review
+#### Test 8: Delete Review
 
 1. **New Request**
 2. **Method**: `DELETE`
@@ -523,7 +593,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 ---
 
-#### Test 8: Remove from Favorites
+#### Test 9: Remove from Favorites
 
 1. **New Request**
 2. **Method**: `DELETE`
@@ -538,39 +608,45 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 ### cURL Test Examples
 
 ```bash
-# 1. Search books
+# 1. Get book categories
+curl http://localhost:5000/api/books/categories
+
+# 2. Search books
 curl "http://localhost:5000/api/books?search=dickens"
 
-# 2. Get book reviews
+# 3. Filter books by category
+curl "http://localhost:5000/api/books?category=Science%20fiction"
+
+# 4. Get book reviews
 curl http://localhost:5000/api/books/84/reviews
 
-# 3. Add to favorites (replace YOUR_TOKEN)
+# 5. Add to favorites (replace YOUR_TOKEN)
 curl -X POST http://localhost:5000/api/books/favorites \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"bookId": 84}'
 
-# 4. Create review
+# 6. Create review
 curl -X POST http://localhost:5000/api/books/84/reviews \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"rating": 5, "feedback": "Amazing book!"}'
 
-# 5. Update review (replace REVIEW_ID)
+# 7. Update review (replace REVIEW_ID)
 curl -X PATCH http://localhost:5000/api/books/reviews/REVIEW_ID \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"rating": 4, "feedback": "Updated review"}'
 
-# 6. Delete review
+# 8. Delete review
 curl -X DELETE http://localhost:5000/api/books/reviews/REVIEW_ID \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# 7. Get favorites
+# 9. Get favorites
 curl http://localhost:5000/api/books/favorites \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# 8. Remove from favorites
+# 10. Remove from favorites
 curl -X DELETE http://localhost:5000/api/books/favorites/84 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
@@ -674,7 +750,7 @@ Use these Gutendex book IDs for testing:
 ```
 
 **Indexes:**
-- `{ userId: 1, bookId: 1 }` - Unique (one review per user per book)
+- `{ userId: 1, bookId: 1 }` - Non-unique (supports user+book filtering)
 - `{ userId: 1 }` - For user reviews
 - `{ bookId: 1 }` - For book reviews
 
@@ -688,7 +764,7 @@ Use these Gutendex book IDs for testing:
 - Reviews support **populate** to show user details
 - All protected routes require **valid JWT token**
 - Users can only update/delete their **own reviews**
-- Each user can only leave **one review per book**
+- Users can leave **multiple reviews per book**
 
 ---
 
@@ -711,4 +787,4 @@ For issues or questions, check:
 
 ---
 
-**Last Updated:** February 24, 2026
+**Last Updated:** March 10, 2026

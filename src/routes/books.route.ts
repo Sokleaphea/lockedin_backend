@@ -11,11 +11,12 @@ import {
   deleteReview,
   getBookReviews,
 } from "../controllers/booksReview";
-import { getBooks } from "../controllers/books.controller";
+import { getBooks, getCategories } from "../controllers/books.controller";
 
 const router = Router();
 
 // Public routes (no auth required)
+
 
 /**
  * @swagger
@@ -46,6 +47,30 @@ const router = Router();
  *         description: Server error
  */
 router.get("/", getBooks);
+
+/**
+ * @swagger
+ * /api/books/categories:
+ *   get:
+ *     summary: Get all available book categories
+ *     description: Retrieves a deduplicated, sorted list of clean book genre categories. Strips location/character-specific subjects. Results are cached for 1 hour.
+ *     tags: [Books]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               example: ["Adventure stories", "Fantasy fiction", "Gothic fiction", "Science fiction"]
+ *       503:
+ *         description: Book service temporarily unavailable
+ *       500:
+ *         description: Server error
+ */
+router.get("/categories", getCategories);
 
 /**
  * @swagger
@@ -166,7 +191,7 @@ router.delete("/favorites/:bookId", removeFavorite);
  * /api/books/{bookId}/reviews:
  *   post:
  *     summary: Create a book review
- *     description: Review - Adds a review for a specific book. Each user can only review a book once
+ *     description: Review - Adds a review for a specific book. Users can submit multiple reviews for the same book
  *     tags: [Books]
  *     security:
  *       - BearerAuth: []
@@ -199,7 +224,7 @@ router.delete("/favorites/:bookId", removeFavorite);
  *       201:
  *         description: Review created successfully
  *       400:
- *         description: Invalid input or duplicate review
+ *         description: Invalid input
  *       401:
  *         description: Unauthorized
  *       500:

@@ -1,5 +1,5 @@
 import express from "express";
-import { getMyProfile, updateMyProfile } from "../controllers/userSetting.controller";
+import { deleteMyAccount, getMyProfile, updateMyProfile } from "../controllers/userSetting.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { Request, Response } from "express";
 import multer from "multer";
@@ -66,7 +66,7 @@ const router = express.Router();
  *     summary: Upload or update user avatar
  *     tags: [User Settings]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -154,5 +154,5 @@ router.patch("/profile/avatar", authMiddleware, upload.single("avatar"), async (
         res.status(500).json({ message: "Failed to upload avatar", err });
     }
 });
-
+router.delete("/delete", authMiddleware, deleteMyAccount);
 export default router;
