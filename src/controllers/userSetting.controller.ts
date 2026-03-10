@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import { Follow } from "../models/follow.model";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { UserStreakModel } from "../models/userStreak.model";
+import { v2 as cloudinary } from "cloudinary";
+import { Todo } from "../models/todo.model";
+import { FlashcardCardModel } from "../models/flashcardCard.model";
 
 export const getMyProfile = async (req: Request, res: Response) => {
     try {
@@ -93,5 +96,25 @@ export const updateMyProfile = async (req: Request, res: Response) => {
         res.json({ message: "Profile Updated" });
     } catch (err) {
         res.status(500).json({ err });
+    }
+}
+export const deleteMyAccount = async (req: Request, res: Response) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const userId = req.user!.id;
+        const user = await User.findById(userId);
+        if (!user) return res.status(400).json({ message: "User not found" })
+        if (user.avatarPublicId) {
+            await cloudinary.uploader.destroy(user.avatarPublicId);
+        } 
+        await Todo.deleteMany({ userId }, { session }),
+        await FlashcardCardModel.deleteMany({ userId}, { session });
+        await FlashcardCardModel.deleteMany({ userId}, { session });
+        await User.findByIdAndDelete(userId);
+        res.status(200).json({ message: "Your account has been deleted successfully." });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Failed to delete account." });
     }
 }
