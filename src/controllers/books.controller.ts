@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { fetchBooks } from "../services/book.service";
+import { fetchBooks, fetchCategories } from "../services/book.service";
 
 export const getBooks = async (req: Request, res: Response) => {
   try {
@@ -14,5 +14,18 @@ export const getBooks = async (req: Request, res: Response) => {
       return res.status(503).json({ message: "Book service is temporarily unavailable" });
     }
     return res.status(500).json({ message: "Failed to fetch books", error: error.message });
+  }
+};
+
+export const getCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = await fetchCategories();
+    return res.json(categories);
+  } catch (error: any) {
+    console.error("❌ Categories fetch error:", error.message);
+    if (error.response || error.code === "ECONNREFUSED" || error.code === "ETIMEDOUT") {
+      return res.status(503).json({ message: "Book service is temporarily unavailable" });
+    }
+    return res.status(500).json({ message: "Failed to fetch categories", error: error.message });
   }
 };
