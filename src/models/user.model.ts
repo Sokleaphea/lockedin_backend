@@ -48,6 +48,12 @@ const userSchema = new Schema(
         lastUsernameUpdate: {
             type: Date,
             default: null,
+        },
+        emailOTP: {
+            type: String,
+        },
+        emailOTPExpires: {
+            type: Date
         }
     },
     { timestamps: true}

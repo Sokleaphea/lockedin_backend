@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import crypto from "crypto";
+import sendEmail from "../utils/sendEmail";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = async (req: Request, res: Response) => {
@@ -43,16 +45,38 @@ export const register = async (req: Request, res: Response) => {
         if (existingUsername) {
             return res.status(400).json({ message: "Username already exist" })
         }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
+        const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
         await User.create({
             email,
             password: hashedPassword,
+            emailOTP: hashedOTP,
+            emailOTPExpires: Date.now() + 10 * 60 * 1000,
             username,
+            isVerified: false,
+        });
+        await sendEmail({
+            to: email,
+            subject: "Verify your Gmail for LockedIn",
+            text: `Your OTP code is ${otp}.`,
+            html: `
+            <h2>Welcome to LockedIn!</h2>
+            <p>Greeeting, ${username},</p>
+            <p>Please use the OTP below to verify your email address:</p>
+            <h3 style="color: #e1842d;">${otp}</h3>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this, you can ignore this email.</p>
+            <hr/>
+            <p>The LockedIn Team</p>
+            `
         });
         res.status(201).json({ message: "User registered successfully" })
     } catch (err) { 
         console.log(err);
         res.status(500).json({ message: "Registration failed" })
     }
+
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -66,6 +90,9 @@ export const login = async (req: Request, res: Response) => {
         // if (user.authProvider === "google") {
         //     return res.status(400).json({ message: "This account is registered with Google. Please login with Google instead." });
         // }
+        if (!user.isVerified) {
+            return res.status(400).json({ message: "Please verify your email first" });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password!);
         if (!isMatch) {
@@ -142,4 +169,22 @@ export const googleAuth = async (req: Request, res: Response) => {
         console.log(error);
         res.status(401).json({ success: false, message: "Invalid token" });
     }
+}
+export const verifyEmailOTP = async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(400).json({ message: "User not found" });
+    if (user.isVerified) return res.status(400).json({ message: "Email already verified" });
+    if (!user.emailOTP || !user.emailOTPExpires || user.emailOTPExpires.getTime() < Date.now()) {
+        return res.status(400).json({ message: "OTP Expired" });
+    }
+    const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
+    if (hashedOTP !== user.emailOTP) return res.status(400).json({ message: "Invalid OTP" });
+    user.isVerified = true;
+    user.emailOTP = undefined;
+    user.emailOTPExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
 }
