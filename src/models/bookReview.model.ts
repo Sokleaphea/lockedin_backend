@@ -37,7 +37,7 @@ const bookReviewSchema = new Schema<BookReview>(
   { timestamps: true }
 );
 
-// One review per user per book
-bookReviewSchema.index({ userId: 1, bookId: 1 }, { unique: true });
+// Non-unique index to keep user+book queries efficient while allowing multiple reviews.
+bookReviewSchema.index({ userId: 1, bookId: 1 });
 
 export const BookReview = model<BookReview>("BookReview", bookReviewSchema);
