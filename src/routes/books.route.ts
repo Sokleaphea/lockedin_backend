@@ -166,7 +166,7 @@ router.delete("/favorites/:bookId", removeFavorite);
  * /api/books/{bookId}/reviews:
  *   post:
  *     summary: Create a book review
- *     description: Review - Adds a review for a specific book. Each user can only review a book once
+ *     description: Review - Adds a review for a specific book. Users can submit multiple reviews for the same book
  *     tags: [Books]
  *     security:
  *       - BearerAuth: []
@@ -199,7 +199,7 @@ router.delete("/favorites/:bookId", removeFavorite);
  *       201:
  *         description: Review created successfully
  *       400:
- *         description: Invalid input or duplicate review
+ *         description: Invalid input
  *       401:
  *         description: Unauthorized
  *       500:
