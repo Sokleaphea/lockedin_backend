@@ -101,6 +101,8 @@ export const searchUsers = async (req: Request, res: Response) => {
             const streak = await UserStreakModel.findOne({ userId: user._id });
 
             return {
+                id: user._id,
+                avatar: user.avatar,
                 username: user.username,
                 displayName: user.displayName,
                 bio: user.bio,
