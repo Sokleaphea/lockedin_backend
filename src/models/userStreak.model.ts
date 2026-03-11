@@ -41,6 +41,10 @@ const UserStreakSchema = new Schema({
   todayDate: {
     type: Date,
   },
+
+  sessionStartTime: {
+    type: Date
+  }
 });
 
 export const UserStreakModel = model(
