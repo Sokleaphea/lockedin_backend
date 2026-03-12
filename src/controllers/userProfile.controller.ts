@@ -79,6 +79,9 @@ export const searchUsers = async (req: Request, res: Response) => {
         const myId = req.user?.id;
 
         const users = await User.find({
+            $and: [
+                {_id: { $ne: myId}}
+            ],
             $or: [
                 { username: { $regex: searchTerm, $options: "i" } },
                 { displayName: { $regex: searchTerm, $options: "i" } }
