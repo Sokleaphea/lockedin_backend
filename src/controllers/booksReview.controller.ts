@@ -21,6 +21,11 @@ export const createReview = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Feedback is required" });
     }
 
+    const existingReview = await BookReview.findOne({ userId, bookId });
+    if (existingReview) {
+      return res.status(400).json({ message: "You have already reviewed this book" });
+    }
+
     const review = await BookReview.create({ userId, bookId, rating, feedback });
     return res.status(201).json(review);
   } catch (error: any) {
@@ -48,6 +53,44 @@ export const updateReview = async (req: Request, res: Response) => {
 
     if (!review.userId.equals(userId)) {
       return res.status(403).json({ message: "You can only edit your own reviews" });
+    }
+
+    const { rating, feedback } = req.body;
+
+    if (rating !== undefined) {
+      if (typeof rating !== "number" || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be a number between 1 and 5" });
+      }
+      review.rating = rating;
+    }
+
+    if (feedback !== undefined) {
+      if (typeof feedback !== "string") {
+        return res.status(400).json({ message: "Feedback must be a string" });
+      }
+      review.feedback = feedback;
+    }
+
+    await review.save();
+    return res.json(review);
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to update review" });
+  }
+};
+
+export const updateMyReviewByBookId = async (req: Request, res: Response) => {
+  try {
+    const userId = new Types.ObjectId(req.user!.id);
+    const bookId = Number(req.params.bookId);
+
+    if (isNaN(bookId)) {
+      return res.status(400).json({ message: "Invalid bookId" });
+    }
+
+    const review = await BookReview.findOne({ userId, bookId });
+
+    if (!review) {
+      return res.status(404).json({ message: "BookReview not found" });
     }
 
     const { rating, feedback } = req.body;

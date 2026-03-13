@@ -8,9 +8,10 @@ import {
 import {
   createReview,
   updateReview,
+  updateMyReviewByBookId,
   deleteReview,
   getBookReviews,
-} from "../controllers/booksReview";
+} from "../controllers/booksReview.controller";
 import { getBooks, getCategories } from "../controllers/books.controller";
 
 const router = Router();
@@ -232,6 +233,49 @@ router.delete("/favorites/:bookId", removeFavorite);
  */
 router.post("/:bookId/reviews", createReview);
 
+/**
+ * @swagger
+ * /api/books/{bookId}/reviews:
+ *   patch:
+ *     summary: Update a book review by bookId
+ *     description: Review - Updates an existing review by bookId. Only the review owner can update it
+ *     tags: [Books]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookId
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: The Gutendex book ID
+ *         example: 84
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 5
+ *               feedback:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Review updated successfully
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Review not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.patch("/:bookId/reviews", updateMyReviewByBookId);
 /**
  * @swagger
  * /api/books/reviews/{reviewId}:
