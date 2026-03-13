@@ -79,6 +79,9 @@ export const searchUsers = async (req: Request, res: Response) => {
         const myId = req.user?.id;
 
         const users = await User.find({
+            $and: [
+                {_id: { $ne: myId}}
+            ],
             $or: [
                 { username: { $regex: searchTerm, $options: "i" } },
                 { displayName: { $regex: searchTerm, $options: "i" } }
@@ -101,6 +104,8 @@ export const searchUsers = async (req: Request, res: Response) => {
             const streak = await UserStreakModel.findOne({ userId: user._id });
 
             return {
+                id: user._id,
+                avatar: user.avatar,
                 username: user.username,
                 displayName: user.displayName,
                 bio: user.bio,
