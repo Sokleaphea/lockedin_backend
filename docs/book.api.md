@@ -32,6 +32,7 @@ http://localhost:5000/api/books
 ### 3. **Review & Rating System**
 - Rate books (1-5 stars)
 - Write detailed feedback
+- Submit multiple reviews for the same book
 - Update/delete your own reviews
 - View all reviews for any book
 
@@ -364,7 +365,7 @@ POST http://localhost:5000/api/books/84/reviews
 
 **Status Codes:**
 - `201` - Review created
-- `400` - Invalid input or duplicate review (one review per user per book)
+- `400` - Invalid input
 - `401` - Unauthorized
 
 ---
@@ -751,7 +752,7 @@ Use these Gutendex book IDs for testing:
 ```
 
 **Indexes:**
-- `{ userId: 1, bookId: 1 }` - Unique (one review per user per book)
+- `{ userId: 1, bookId: 1 }` - Non-unique (supports user+book filtering)
 - `{ userId: 1 }` - For user reviews
 - `{ bookId: 1 }` - For book reviews
 
@@ -765,7 +766,7 @@ Use these Gutendex book IDs for testing:
 - Reviews support **populate** to show user details
 - All protected routes require **valid JWT token**
 - Users can only update/delete their **own reviews**
-- Each user can only leave **one review per book**
+- Users can leave **multiple reviews per book**
 
 ---
 

@@ -1,8 +1,8 @@
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { Request, Response } from "express";
-import router from "./auth.route";
-import { getUserProfile } from "../controllers/userProfile.controller";
+import { Request, Response, Router } from "express";
+import { getUserProfile, searchUsers } from "../controllers/userProfile.controller";
 
+const router = Router();
 /**
  * @swagger
  * tags:
@@ -63,13 +63,14 @@ import { getUserProfile } from "../controllers/userProfile.controller";
  * @swagger
  * components:
  *   securitySchemes:
- *     bearerAuth:
+ *     BearerAuth:
  *       type: http
  *       scheme: bearer
  *       bearerFormat: JWT
  */
 
 router.use(authMiddleware);
+router.get("/search", authMiddleware, searchUsers);
 router.get("/:username", authMiddleware, getUserProfile);
 
 export default router;

@@ -5,6 +5,7 @@ interface EmailOption {
     to: string,
     subject: string,
     text: string,
+    html: string
 }
 
 export default async function sendEmail(options: EmailOption) {
@@ -21,5 +22,6 @@ export default async function sendEmail(options: EmailOption) {
         to: options.to,
         subject: options.subject,
         text: options.text,
+        html: options.html,
     });
 }

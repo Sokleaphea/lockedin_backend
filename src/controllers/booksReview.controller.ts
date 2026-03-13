@@ -4,7 +4,11 @@ import { BookReview } from "../models/bookReview.model";
 
 export const createReview = async (req: Request, res: Response) => {
   try {
-    const userId = new Types.ObjectId(req.user!.id);
+    if (!req.user?.id || !Types.ObjectId.isValid(req.user.id)) {
+      return res.status(401).json({ message: "Invalid user token payload" });
+    }
+
+    const userId = new Types.ObjectId(req.user.id);
     const bookId = Number(req.params.bookId);
 
     if (isNaN(bookId)) {
@@ -29,9 +33,14 @@ export const createReview = async (req: Request, res: Response) => {
     const review = await BookReview.create({ userId, bookId, rating, feedback });
     return res.status(201).json(review);
   } catch (error: any) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "You have already reviewed this book" });
+    // If this happens, a legacy unique DB index probably still exists.
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        message:
+          "Duplicate-key error from database index. Drop old unique index userId_1_bookId_1 to allow multiple reviews per user/book.",
+      });
     }
+
     return res.status(500).json({ message: "Failed to create review" });
   }
 };
