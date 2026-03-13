@@ -375,7 +375,7 @@ POST http://localhost:5000/api/books/84/reviews
 **Protected** - Requires authentication (only review owner)
 
 ```http
-PATCH /api/books/reviews/:reviewId
+PATCH /api/books/:bookId/reviews
 ```
 
 **Headers:**
@@ -396,7 +396,7 @@ Content-Type: application/json
 **Example:**
 
 ```bash
-PATCH http://localhost:5000/api/books/reviews/65f789abc123def456789014
+PATCH http://localhost:5000/api/books/84/reviews
 ```
 
 **Response:**
@@ -416,9 +416,11 @@ PATCH http://localhost:5000/api/books/reviews/65f789abc123def456789014
 **Status Codes:**
 - `200` - Successfully updated
 - `400` - Invalid input
-- `403` - Not authorized (can only edit your own reviews)
 - `404` - Review not found
 - `401` - Unauthorized
+
+**Note:**
+Legacy endpoint `PATCH /api/books/reviews/:reviewId` is still supported for backward compatibility.
 
 ---
 
@@ -543,7 +545,7 @@ DELETE http://localhost:5000/api/books/reviews/65f789abc123def456789014
 
 1. **New Request**
 2. **Method**: `PATCH`
-3. **URL**: `http://localhost:5000/api/books/reviews/{reviewId}` (use `_id` from Test 4)
+3. **URL**: `http://localhost:5000/api/books/84/reviews`
 4. **Auth** tab → **Bearer Token** → Paste token
 5. **Body** tab → **JSON**:
    ```json
@@ -632,8 +634,8 @@ curl -X POST http://localhost:5000/api/books/84/reviews \
   -H "Content-Type: application/json" \
   -d '{"rating": 5, "feedback": "Amazing book!"}'
 
-# 7. Update review (replace REVIEW_ID)
-curl -X PATCH http://localhost:5000/api/books/reviews/REVIEW_ID \
+# 7. Update review by bookId
+curl -X PATCH http://localhost:5000/api/books/84/reviews \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"rating": 4, "feedback": "Updated review"}'
