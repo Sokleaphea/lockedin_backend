@@ -5,11 +5,11 @@ import {
   getUserGroups,
   getGroupDetails,
   addGroupMembers,
-  removeGroupMembers,
-  transferGroupOwnership,
-  leaveGroup,
-  deleteGroup,
-  renameGroup,
+  // removeGroupMembers,
+  // transferGroupOwnership,
+  // leaveGroup,
+  // deleteGroup,
+  // renameGroup,
 } from "../controllers/groupchat.controller";
 
 const router = Router();
@@ -20,11 +20,11 @@ router.post("/", createGroupChat);
 router.get("/", getUserGroups);
 router.get("/:groupId", getGroupDetails);
 router.post("/:groupId/members", addGroupMembers);
-router.delete("/:groupId/members", removeGroupMembers);
-router.patch("/:groupId/transfer", transferGroupOwnership);
-router.post("/:groupId/leave", leaveGroup);
-router.delete("/:groupId", deleteGroup);
-router.patch("/:groupId/rename", renameGroup);
+// router.delete("/:groupId/members", removeGroupMembers);
+// router.patch("/:groupId/transfer", transferGroupOwnership);
+// router.post("/:groupId/leave", leaveGroup);
+// router.delete("/:groupId", deleteGroup);
+// router.patch("/:groupId/rename", renameGroup);
 
 /**
  * @swagger
