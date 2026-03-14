@@ -2,6 +2,7 @@ import { raw, Request, Response } from "express";
 import { Types } from "mongoose";
 import { Follow } from "../models/follow.model";
 import User from "../models/user.model";
+import { sendPushNotification } from "../services/notification.service";
 
 export const followUser = async (req: Request, res: Response) => {
     try {
@@ -25,6 +26,13 @@ export const followUser = async (req: Request, res: Response) => {
         const targetExists = await User.findById(followingId);
         if (!targetExists) {
             return res.status(404).json({ message: "User not found" });
+        }
+        if (targetExists.deviceToken) {
+            await sendPushNotification(
+                rawTarget.deviceToken,
+                "New follower",
+                "Someone start following you"
+            );
         }
 
         await Follow.create({
