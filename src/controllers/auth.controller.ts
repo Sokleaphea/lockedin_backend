@@ -9,7 +9,7 @@ import sendEmail from "../utils/sendEmail";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = async (req: Request, res: Response) => {
     try {
-        const { email, password, username, confirmPassword } = req.body;
+        const { email, password, username, confirmPassword, deviceToken } = req.body;
         if (!email || !password || !username || !confirmPassword) {
             return res.status(400).json({ message: "All fields are required" })
         }
@@ -55,6 +55,7 @@ export const register = async (req: Request, res: Response) => {
             emailOTPExpires: Date.now() + 10 * 60 * 1000,
             username,
             isVerified: false,
+            deviceToken: deviceToken || undefined,
         });
         await sendEmail({
             to: email,
@@ -81,7 +82,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, deviceToken } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ message: "Invalid credentials"})
@@ -97,6 +98,10 @@ export const login = async (req: Request, res: Response) => {
         const isMatch = await bcrypt.compare(password, user.password!);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
+        }
+        if (deviceToken) {
+            user.deviceToken = deviceToken;
+            await user.save();
         }
 
         const token = jwt.sign(
@@ -146,6 +151,10 @@ export const googleAuth = async (req: Request, res: Response) => {
             user.isVerified = true;
             await user.save();
         }
+        if (req.body.deviceToken) {
+            user.deviceToken = req.body.deviceToken;
+            await user.save();
+        }
 
         // Generate your app's JWT token
         const token = jwt.sign(
@@ -187,4 +196,12 @@ export const verifyEmailOTP = async (req: Request, res: Response) => {
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully" });
+}
+export const saveDeviceToken = async (req: Request, res: Response) => {
+    const {token} = req.body;
+    const userId = req.user!.id;
+
+    if (!token) return res.status(400).json({ message: "No token provided" })
+    await User.updateOne({ _id: userId }, {deviceToken: token});
+    res.json({ success: true});
 }

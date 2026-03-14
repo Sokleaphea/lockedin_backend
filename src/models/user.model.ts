@@ -54,6 +54,9 @@ const userSchema = new Schema(
         },
         emailOTPExpires: {
             type: Date
+        },
+        deviceToken: {
+            type: String
         }
     },
     { timestamps: true}
