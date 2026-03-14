@@ -2,5 +2,5 @@
 .DS_Store
 node_modules
 .env
-
+lockedin-firebase-admin.json
 dist
