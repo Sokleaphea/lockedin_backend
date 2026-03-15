@@ -44,7 +44,11 @@ const UserStreakSchema = new Schema({
 
   sessionStartTime: {
     type: Date
-  }
+  },
+
+  lastGoalUpdatedAt: {
+    type: Date,
+  },
 });
 
 export const UserStreakModel = model(
