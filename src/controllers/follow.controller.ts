@@ -1,4 +1,4 @@
-import { raw, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { Follow } from "../models/follow.model";
 import User from "../models/user.model";
@@ -27,25 +27,47 @@ export const followUser = async (req: Request, res: Response) => {
         if (!targetExists) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        await Follow.create({ followerId, followingId });
+
+        // ✅ Fixed: use targetExists.deviceToken (not rawTarget.deviceToken)
+        // Also get follower's display name for the notification message
+        const follower = await User.findById(followerId).select("displayName username");
+        const followerName = follower?.displayName || follower?.username || "Someone";
+
         if (targetExists.deviceToken) {
             await sendPushNotification(
-                rawTarget.deviceToken,
-                "New follower",
-                "Someone start following you"
+                targetExists.deviceToken,
+                "New Follower",
+                `${followerName} started following you`
             );
         }
 
-        await Follow.create({
-            followerId,
-            followingId,
+        // Check if they follow back (mutual) — notify follower too
+        const isFollowedBack = await Follow.findOne({
+            followerId: followingId,
+            followingId: followerId,
         });
+
+        if (isFollowedBack) {
+            // They are now mutual — notify the original follower
+            const currentUser = await User.findById(followerId).select("deviceToken");
+            const targetName = targetExists.displayName || targetExists.username || "Someone";
+
+            if (currentUser?.deviceToken) {
+                await sendPushNotification(
+                    currentUser.deviceToken,
+                    "You're now connected!",
+                    `You and ${targetName} are now following each other`
+                );
+            }
+        }
 
         return res.status(201).json({ message: "Followed successfully" });
     } catch (error: any) {
         if (error.code === 11000) {
             return res.status(400).json({ message: "Already following this user" });
         }
-
         return res.status(500).json({ message: "Failed to follow user" });
     }
 };
@@ -65,10 +87,7 @@ export const unfollowUser = async (req: Request, res: Response) => {
 
         const followingId = new Types.ObjectId(rawTarget);
 
-        const result = await Follow.findOneAndDelete({
-            followerId,
-            followingId,
-        });
+        const result = await Follow.findOneAndDelete({ followerId, followingId });
 
         if (!result) {
             return res.status(404).json({ message: "Follow relationship not found" });
@@ -81,88 +100,50 @@ export const unfollowUser = async (req: Request, res: Response) => {
     }
 };
 
-// export const getFollowers = async (req: Request, res: Response) => {
-//     try {
-//         const userId = new Types.ObjectId(req.user!.id);
-
-//         const followers = await Follow.find({ followingId: userId });
-
-//         const followerIds = followers.map(f => f.followerId);
-
-//         const users = await User.find({ _id: { $in: followerIds } })
-//             .select("username displayName avatar");
-
-//         return res.json(users);
-//     } catch {
-//         return res.status(500).json({ message: "Failed to fetch followers" });
-//     }
-// };
-
 export const getFollowers = async (req: Request, res: Response) => {
-  try {
-    const userId = new Types.ObjectId(req.user!.id);
+    try {
+        const userId = new Types.ObjectId(req.user!.id);
 
-    // Users who follow me
-    const followers = await Follow.find({ followingId: userId });
-    const followerIds = followers.map(f => f.followerId);
+        const followers = await Follow.find({ followingId: userId });
+        const followerIds = followers.map(f => f.followerId);
 
-    // Users I follow
-    const following = await Follow.find({ followerId: userId });
-    const followingIds = following.map(f => f.followingId.toString());
+        const following = await Follow.find({ followerId: userId });
+        const followingIds = following.map(f => f.followingId.toString());
 
-    const users = await User.find({ _id: { $in: followerIds } })
-      .select("username displayName avatar");
+        const users = await User.find({ _id: { $in: followerIds } })
+            .select("username displayName avatar");
 
-    const result = users.map(user => ({
-      ...user.toObject(),
-      isMutual: followingIds.includes(user._id.toString()),
-    }));
+        const result = users.map(user => ({
+            ...user.toObject(),
+            isMutual: followingIds.includes(user._id.toString()),
+        }));
 
-    return res.json(result);
-  } catch {
-    return res.status(500).json({ message: "Failed to fetch followers" });
-  }
+        return res.json(result);
+    } catch {
+        return res.status(500).json({ message: "Failed to fetch followers" });
+    }
 };
 
-// export const getFollowing = async (req: Request, res: Response) => {
-//     try {
-//         const userId = new Types.ObjectId(req.user!.id);
-
-//         const following = await Follow.find({ followerId: userId });
-
-//         const followingIds = following.map(f => f.followingId);
-
-//         const users = await User.find({ _id: { $in: followingIds } })
-//             .select("username displayName avatar");
-
-//         return res.json(users);
-//     } catch {
-//         return res.status(500).json({ message: "Failed to fetch following" });
-//     }
-// };
-
 export const getFollowing = async (req: Request, res: Response) => {
-  try {
-    const userId = new Types.ObjectId(req.user!.id);
+    try {
+        const userId = new Types.ObjectId(req.user!.id);
 
-    // Users I follow
-    const following = await Follow.find({ followerId: userId });
-    const followingIds = following.map(f => f.followingId);
+        const following = await Follow.find({ followerId: userId });
+        const followingIds = following.map(f => f.followingId);
 
-    // Users who follow me
-    const followers = await Follow.find({ followingId: userId });
-    const followerIds = followers.map(f => f.followerId.toString());
+        const followers = await Follow.find({ followingId: userId });
+        const followerIds = followers.map(f => f.followerId.toString());
 
-    const users = await User.find({ _id: { $in: followingIds } })
-      .select("username displayName avatar");
+        const users = await User.find({ _id: { $in: followingIds } })
+            .select("username displayName avatar");
 
-    const result = users.map(user => ({
-      ...user.toObject(),
-      isMutual: followerIds.includes(user._id.toString()),
-    }));
+        const result = users.map(user => ({
+            ...user.toObject(),
+            isMutual: followerIds.includes(user._id.toString()),
+        }));
 
-    return res.json(result);
-  } catch {
-    return res.status(500).json({ message: "Failed to fetch following" });
-  }
+        return res.json(result);
+    } catch {
+        return res.status(500).json({ message: "Failed to fetch following" });
+    }
 };

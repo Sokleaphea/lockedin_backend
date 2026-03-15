@@ -56,7 +56,8 @@ const userSchema = new Schema(
             type: Date
         },
         deviceToken: {
-            type: String
+            type: String,
+            default: null,
         }
     },
     { timestamps: true}
