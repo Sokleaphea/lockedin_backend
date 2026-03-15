@@ -197,11 +197,3 @@ export const verifyEmailOTP = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: "Email verified successfully" });
 }
-export const saveDeviceToken = async (req: Request, res: Response) => {
-    const {token} = req.body;
-    const userId = req.user!.id;
-
-    if (!token) return res.status(400).json({ message: "No token provided" })
-    await User.updateOne({ _id: userId }, {deviceToken: token});
-    res.json({ success: true});
-}

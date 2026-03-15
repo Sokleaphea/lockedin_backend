@@ -132,10 +132,6 @@ export const searchUsers = async (req: Request, res: Response) => {
     }
 };
 
-// Add this to your userProfile.controller.ts
-
-import { Request, Response } from "express";
-import User from "../models/user.model";
 
 /**
  * PATCH /api/user/device-token
