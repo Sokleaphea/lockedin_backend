@@ -1,6 +1,4 @@
 import "dotenv/config";
-import { version } from "node:os";
-import { title } from "node:process";
 import swaggerJSDoc from "swagger-jsdoc";
 
 const PORT = process.env.PORT || 5000;
