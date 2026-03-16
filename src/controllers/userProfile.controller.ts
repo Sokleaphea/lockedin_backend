@@ -131,3 +131,24 @@ export const searchUsers = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Failed to search users" });
     }
 };
+
+
+/**
+ * PATCH /api/user/device-token
+ * Save or clear FCM device token
+ */
+export const saveDeviceToken = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { deviceToken } = req.body;
+
+    await User.findByIdAndUpdate(userId, {
+      deviceToken: deviceToken ?? null,
+    });
+
+    return res.json({ message: 'Device token updated' });
+  } catch (error) {
+    console.error('Save device token error:', error);
+    return res.status(500).json({ message: 'Failed to save device token' });
+  }
+};
