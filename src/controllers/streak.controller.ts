@@ -4,6 +4,27 @@ import { UserStreakModel } from "../models/userStreak.model";
 import { yesterdayUTC7, startOfDayUTC7 } from "../utils/dateUTC7";
 import { updateStreakAfterFocus } from "../services/streak.service";
 
+function getGoalCooldownStatus(lastGoalUpdatedAt?: Date | null) {
+  if (!lastGoalUpdatedAt) {
+    return {
+      canUpdateGoal: true,
+      daysRemaining: 0,
+    };
+  }
+
+  const now = startOfDayUTC7(new Date());
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysSinceUpdate = Math.floor(
+    (now.getTime() - lastGoalUpdatedAt.getTime()) / msPerDay
+  );
+  const daysRemaining = Math.max(0, 7 - daysSinceUpdate);
+
+  return {
+    canUpdateGoal: daysRemaining === 0,
+    daysRemaining,
+  };
+}
+
 
 // POST /api/streak/goal
 export async function updateDailyGoal(req: Request, res: Response) {
@@ -29,20 +50,12 @@ export async function updateDailyGoal(req: Request, res: Response) {
     }
 
     // Enforce 1-week cooldown between goal updates
-    if (streak.lastGoalUpdatedAt) {
-        const now = startOfDayUTC7(new Date());
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const daysSinceUpdate = Math.floor(
-            (now.getTime() - streak.lastGoalUpdatedAt.getTime()) / msPerDay
-        );
-        const daysRemaining = 7 - daysSinceUpdate;
-
-        if (daysRemaining > 0) {
-            return res.status(403).json({
-                message: `You can only update your goal once per week. Try again in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`,
-                daysRemaining,
-            });
-        }
+    const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
+    if (!cooldown.canUpdateGoal) {
+      return res.status(403).json({
+        message: `You can only update your goal once per week. Try again in ${cooldown.daysRemaining} day${cooldown.daysRemaining === 1 ? "" : "s"}.`,
+        daysRemaining: cooldown.daysRemaining,
+      });
     }
 
     streak.dailyGoalSeconds = dailyGoalSeconds;
@@ -77,12 +90,16 @@ export async function getStreak(req: Request, res: Response) {
     console.log("Yesterday:", yesterday);
     console.log("LastGoalMet:", streak.lastGoalMetDate);
 
+    const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
+
     return res.json({
         currentStreak: streak.currentStreak,
         longestStreak: streak.longestStreak,
         totalGoalDays: streak.totalGoalDays,
         dailyGoalSeconds: streak.dailyGoalSeconds,
         todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
+      canUpdateGoal: cooldown.canUpdateGoal,
+      goalUpdateDaysRemaining: cooldown.daysRemaining,
     });
 }
 
