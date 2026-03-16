@@ -21,11 +21,13 @@ import groupChatRoute from "./routes/groupchat.route";
 import streakRoute from "./routes/streak.route";
 import studyRoomRoute from "./routes/studyRoom.route";
 import { startCleanupJobs } from "./utils/cleanupRooms";
+import { deleteAccountsCron } from "./jobs/deleteAccount";
 
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
+deleteAccountsCron();
 // Configure CORS before routes
 app.use(cors({
   origin: true, // Allow all origins (mobile app sends requests, not a browser)

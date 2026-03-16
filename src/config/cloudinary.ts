@@ -8,16 +8,11 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-async function uploadFile(filePath: string) {
+export async function uploadFile(filePath: string) {
     const result = await cloudinary.uploader.upload(filePath, {
         upload_preset: "users_avatar",
     });
     return result;
 }
 
-// async function testUpload() {
-//     const result = await uploadFile("path/to/local/avatar.png");
-//     console.log("Secure URL:", result.secure_url);
-// }
-
-// testUpload();
+export { cloudinary };
