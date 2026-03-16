@@ -23,11 +23,31 @@ export async function updateDailyGoal(req: Request, res: Response) {
         streak = await UserStreakModel.create({
             userId,
             dailyGoalSeconds,
+            lastGoalUpdatedAt: startOfDayUTC7(new Date()),
         });
-    } else {
-        streak.dailyGoalSeconds = dailyGoalSeconds;
-        await streak.save();
+        return res.json({ success: true });
     }
+
+    // Enforce 1-week cooldown between goal updates
+    if (streak.lastGoalUpdatedAt) {
+        const now = startOfDayUTC7(new Date());
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const daysSinceUpdate = Math.floor(
+            (now.getTime() - streak.lastGoalUpdatedAt.getTime()) / msPerDay
+        );
+        const daysRemaining = 7 - daysSinceUpdate;
+
+        if (daysRemaining > 0) {
+            return res.status(403).json({
+                message: `You can only update your goal once per week. Try again in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`,
+                daysRemaining,
+            });
+        }
+    }
+
+    streak.dailyGoalSeconds = dailyGoalSeconds;
+    streak.lastGoalUpdatedAt = startOfDayUTC7(new Date());
+    await streak.save();
 
     return res.json({ success: true });
 }

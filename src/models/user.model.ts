@@ -57,6 +57,10 @@ const userSchema = new Schema(
         },
         deviceToken: {
             type: String,
+            default: null
+        },
+        deletedAt: {
+            type: Date,
             default: null,
         }
     },

@@ -1,5 +1,5 @@
 import express from "express";
-import { deleteMyAccount, getMyProfile, updateMyProfile } from "../controllers/userSetting.controller";
+import { deleteMyAccount, getMyProfile, recoverMyAccount, updateMyProfile } from "../controllers/userSetting.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { Request, Response } from "express";
 import multer from "multer";
@@ -155,4 +155,5 @@ router.patch("/profile/avatar", authMiddleware, upload.single("avatar"), async (
     }
 });
 router.delete("/delete", authMiddleware, deleteMyAccount);
+router.post("/recover", authMiddleware, recoverMyAccount);
 export default router;
