@@ -78,17 +78,14 @@ export async function getStreak(req: Request, res: Response) {
     }
 
     // Lazy reset
-    if (
-        streak.lastGoalMetDate &&
-        streak.lastGoalMetDate.getTime() < yesterday.getTime()
-    ) {
+    const lastGoalMetDay = streak.lastGoalMetDate
+      ? startOfDayUTC7(streak.lastGoalMetDate)
+      : null;
+
+    if (lastGoalMetDay && lastGoalMetDay.getTime() < yesterday.getTime()) {
         streak.currentStreak = 0;
         await streak.save();
     }
-
-    console.log("System now:", new Date());
-    console.log("Yesterday:", yesterday);
-    console.log("LastGoalMet:", streak.lastGoalMetDate);
 
     const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
 
