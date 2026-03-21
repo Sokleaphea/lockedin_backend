@@ -90,13 +90,14 @@ export async function getStreak(req: Request, res: Response) {
     const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
 
     return res.json({
-        currentStreak: streak.currentStreak,
-        longestStreak: streak.longestStreak,
-        totalGoalDays: streak.totalGoalDays,
-        dailyGoalSeconds: streak.dailyGoalSeconds,
-        todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
+      currentStreak: streak.currentStreak,
+      longestStreak: streak.longestStreak,
+      totalGoalDays: streak.totalGoalDays,
+      dailyGoalSeconds: streak.dailyGoalSeconds,
+      todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
       canUpdateGoal: cooldown.canUpdateGoal,
       goalUpdateDaysRemaining: cooldown.daysRemaining,
+      lastGoalMetDate: streak.lastGoalMetDate,
     });
 }
 
