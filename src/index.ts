@@ -22,12 +22,12 @@ import streakRoute from "./routes/streak.route";
 import studyRoomRoute from "./routes/studyRoom.route";
 import { startCleanupJobs } from "./utils/cleanupRooms";
 import { deleteAccountsCron } from "./jobs/deleteAccount";
+import { startStreakResetCron } from "./cron/streakReset.cron";
 
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-deleteAccountsCron();
 // Configure CORS before routes
 app.use(cors({
   origin: true, // Allow all origins (mobile app sends requests, not a browser)
@@ -62,6 +62,8 @@ app.use("/api/study-rooms", studyRoomRoute);
   try {
     await connectDB();
     startCleanupJobs();
+    startStreakResetCron();
+    deleteAccountsCron();
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`✅ Server running at http://localhost:${PORT}`);

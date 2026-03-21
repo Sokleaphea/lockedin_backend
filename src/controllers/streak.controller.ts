@@ -67,39 +67,62 @@ export async function updateDailyGoal(req: Request, res: Response) {
 
 // GET /api/streak
 export async function getStreak(req: Request, res: Response) {
-    const userId = new Types.ObjectId(req.user!.id);
-    const now = new Date();
-    const yesterday = yesterdayUTC7(now);
+  const userId = new Types.ObjectId(req.user!.id);
 
-    let streak = await UserStreakModel.findOne({ userId });
+  let streak = await UserStreakModel.findOne({ userId });
 
-    if (!streak) {
-        streak = await UserStreakModel.create({ userId });
-    }
+  if (!streak) {
+    streak = await UserStreakModel.create({ userId });
+  }
 
-    // Lazy reset
-    const lastGoalMetDay = streak.lastGoalMetDate
-      ? startOfDayUTC7(streak.lastGoalMetDate)
-      : null;
+  const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
 
-    if (lastGoalMetDay && lastGoalMetDay.getTime() < yesterday.getTime()) {
-        streak.currentStreak = 0;
-        await streak.save();
-    }
-
-    const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
-
-    return res.json({
-      currentStreak: streak.currentStreak,
-      longestStreak: streak.longestStreak,
-      totalGoalDays: streak.totalGoalDays,
-      dailyGoalSeconds: streak.dailyGoalSeconds,
-      todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
-      canUpdateGoal: cooldown.canUpdateGoal,
-      goalUpdateDaysRemaining: cooldown.daysRemaining,
-      lastGoalMetDate: streak.lastGoalMetDate,
-    });
+  return res.json({
+    currentStreak: streak.currentStreak,
+    longestStreak: streak.longestStreak,
+    totalGoalDays: streak.totalGoalDays,
+    dailyGoalSeconds: streak.dailyGoalSeconds,
+    todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
+    canUpdateGoal: cooldown.canUpdateGoal,
+    goalUpdateDaysRemaining: cooldown.daysRemaining,
+    lastGoalMetDate: streak.lastGoalMetDate,
+  });
 }
+
+// export async function getStreak(req: Request, res: Response) {
+//     const userId = new Types.ObjectId(req.user!.id);
+//     const now = new Date();
+//     const yesterday = yesterdayUTC7(now);
+
+//     let streak = await UserStreakModel.findOne({ userId });
+
+//     if (!streak) {
+//         streak = await UserStreakModel.create({ userId });
+//     }
+
+//     // Lazy reset
+//     const lastGoalMetDay = streak.lastGoalMetDate
+//       ? startOfDayUTC7(streak.lastGoalMetDate)
+//       : null;
+
+//     if (lastGoalMetDay && lastGoalMetDay.getTime() < yesterday.getTime()) {
+//         streak.currentStreak = 0;
+//         await streak.save();
+//     }
+
+//     const cooldown = getGoalCooldownStatus(streak.lastGoalUpdatedAt);
+
+//     return res.json({
+//       currentStreak: streak.currentStreak,
+//       longestStreak: streak.longestStreak,
+//       totalGoalDays: streak.totalGoalDays,
+//       dailyGoalSeconds: streak.dailyGoalSeconds,
+//       todayAccumulatedSeconds: streak.todayAccumulatedSeconds,
+//       canUpdateGoal: cooldown.canUpdateGoal,
+//       goalUpdateDaysRemaining: cooldown.daysRemaining,
+//       lastGoalMetDate: streak.lastGoalMetDate,
+//     });
+// }
 
 export async function recordFocusTime(req: Request, res: Response) {
     const userId = new Types.ObjectId(req.user!.id);
