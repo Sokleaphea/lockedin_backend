@@ -72,6 +72,7 @@ export const register = async (req: Request, res: Response) => {
             <p>The LockedIn Team</p>
             `
         });
+        console.log("Email")
         res.status(201).json({ message: "User registered successfully" })
     } catch (err) { 
         console.log(err);
