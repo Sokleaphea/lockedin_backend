@@ -39,8 +39,9 @@ export const sendOTP = async (req: Request, res: Response) => {
             });
         } catch (err) {
             console.error("SendGrid failed:", err);
+            return res.status(500).json({ message: "Failed to send OTP email" });
         }   
-        return res.status(500).json({ message: "Failed to send OTP email" });
+        return res.status(200).json({ message: "OTP sent successfully" });
     } catch (err) {
         console.error("sendOTP route failed:", err);
         res.status(500).json({ message: "Internal server error" });
