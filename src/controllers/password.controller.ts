@@ -29,7 +29,7 @@ export const sendOTP = async (req: Request, res: Response) => {
         text: `Your OTP is: ${otp}.`,
         html:`<h2>Welcome to LockedIn!</h2>
             <p>Greeeting, ${user.username},</p>
-            <p>Please use the OTP below to verify your email address:</p>
+            <p>Please use the OTP below to reset your password:</p>
             <h3 style="color: #e1842d;">${otp}</h3>
             <p>This code will expire in 10 minutes.</p>
             <p>If you didn't request this, you can ignore this email.</p>
@@ -50,7 +50,7 @@ export const resetPasswordWithOTP = async (req: Request, res: Response) => {
 
     const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
     if (!user.resetOTP || user.resetOTP !== hashedOTP || !user.resetOTPExpires || user.resetOTPExpires < new Date()) {
-        return res.status(400).json({ message: "Invalid or expire OTP" });
+        return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
